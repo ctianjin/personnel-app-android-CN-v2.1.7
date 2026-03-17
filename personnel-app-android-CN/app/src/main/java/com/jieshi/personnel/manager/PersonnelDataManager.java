@@ -1,0 +1,621 @@
+package com.jieshi.personnel.manager;
+
+import com.jieshi.personnel.model.*;
+import com.jieshi.personnel.util.PinyinUtil;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+/**
+ * 人员数据管理类
+ * 实现 CSV 加载、搜索、增删、导出功能
+ * 适用于 Android 移动端离线存储
+ */
+public class PersonnelDataManager {
+    
+    /** 内存中的人员数据列表 */
+    private List<PersonnelInfo> personnelList;
+    /** 按姓名索引的 Map，用于快速搜索 */
+    private Map<String, PersonnelInfo> nameIndex;
+    /** CSV 文件路径 */
+    private String csvFilePath;
+    /** 日期格式化 */
+    private SimpleDateFormat dateFormat;
+
+    /**
+     * 构造函数
+     * @param csvFilePath CSV 文件存储路径
+     */
+    public PersonnelDataManager(String csvFilePath) {
+        this.csvFilePath = csvFilePath;
+        this.personnelList = new ArrayList<>();
+        this.nameIndex = new HashMap<>();
+        this.dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
+    }
+
+    // ==================== 功能 1: 从 CSV 文件加载人员信息 ====================
+    
+    /**
+     * 从 CSV 文件加载人员信息到内存中
+     * @return 加载成功返回 true，失败返回 false
+     */
+    public boolean loadFromCsv() {
+        return loadFromCsv(csvFilePath);
+    }
+
+    /**
+     * 从指定 CSV 文件加载人员信息到内存中
+     * @param filePath CSV 文件路径
+     * @return 加载成功返回 true，失败返回 false
+     */
+    public boolean loadFromCsv(String filePath) {
+        File file = new File(filePath);
+        if (!file.exists()) {
+            System.out.println("文件不存在：" + filePath);
+            return false;
+        }
+
+        personnelList.clear();
+        nameIndex.clear();
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+            
+            // 读取表头
+            String headerLine = reader.readLine();
+            if (headerLine == null) {
+                System.out.println("CSV 文件为空");
+                return false;
+            }
+            
+            // 解析表头，获取列索引
+            Map<String, Integer> columnIndex = parseHeader(headerLine);
+            
+            // 逐行读取数据
+            String line;
+            int lineNumber = 1;
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
+                try {
+                    PersonnelInfo info = parseCsvLine(line, columnIndex);
+                    if (info != null) {
+                        personnelList.add(info);
+                        // 建立姓名索引（支持重名，用列表）
+                        indexPersonnel(info);
+                    }
+                } catch (Exception e) {
+                    System.out.println("第 " + lineNumber + " 行解析失败：" + e.getMessage());
+                }
+            }
+            
+            System.out.println("成功加载 " + personnelList.size() + " 条人员信息");
+            return true;
+            
+        } catch (IOException e) {
+            System.out.println("读取 CSV 文件失败：" + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * 解析 CSV 表头
+     */
+    private Map<String, Integer> parseHeader(String headerLine) {
+        Map<String, Integer> columnIndex = new HashMap<>();
+        String[] columns = headerLine.split(",");
+        for (int i = 0; i < columns.length; i++) {
+            columnIndex.put(columns[i].trim().toLowerCase(), i);
+        }
+        return columnIndex;
+    }
+
+    /**
+     * 解析 CSV 数据行
+     */
+    private PersonnelInfo parseCsvLine(String line, Map<String, Integer> columnIndex) {
+        String[] values = parseCsvValues(line);
+        
+        PersonnelInfo info = new PersonnelInfo();
+        
+        // 基本信息
+        info.setId(getValue(values, columnIndex, "id"));
+        info.setName(getValue(values, columnIndex, "name"));
+        info.setGender(getValue(values, columnIndex, "gender"));
+        info.setBirthDate(getValue(values, columnIndex, "birthdate"));
+        info.setEthnicity(getValue(values, columnIndex, "ethnicity"));
+        info.setPoliticalStatus(getValue(values, columnIndex, "politicalstatus"));
+        info.setEducation(getValue(values, columnIndex, "education"));
+        info.setMajor(getValue(values, columnIndex, "major"));
+        info.setWorkStartDate(getValue(values, columnIndex, "workstartdate"));
+        info.setPhone(getValue(values, columnIndex, "phone"));
+        
+        // 人员类型
+        String typeStr = getValue(values, columnIndex, "personneltype");
+        if (!typeStr.isEmpty()) {
+            try {
+                info.setPersonnelType(PersonnelType.fromDisplayName(typeStr));
+            } catch (IllegalArgumentException e) {
+                System.out.println("未知的人员类型：" + typeStr);
+            }
+        }
+        
+        // 政府层级
+        GovernmentLevel govLevel = new GovernmentLevel();
+        govLevel.setTownName(getValue(values, columnIndex, "townname"));
+        govLevel.setDepartment(getValue(values, columnIndex, "department"));
+        govLevel.setPosition(getValue(values, columnIndex, "position"));
+        govLevel.setRank(getValue(values, columnIndex, "rank"));
+        govLevel.setVillageLeader("是".equals(getValue(values, columnIndex, "isvillageleader")));
+        
+        String[] villages = getValue(values, columnIndex, "stationedvillages").split("\\|");
+        govLevel.setStationedVillages(villages);
+        
+        if (!govLevel.getTownName().isEmpty() || !govLevel.getDepartment().isEmpty()) {
+            info.setGovernmentLevel(govLevel);
+        }
+        
+        // 村层级
+        VillageLevel villageLevel = new VillageLevel();
+        villageLevel.setVillageName(getValue(values, columnIndex, "villagename"));
+        villageLevel.setVillageType(getValue(values, columnIndex, "villagetype"));
+        villageLevel.setPosition(getValue(values, columnIndex, "villageposition"));
+        villageLevel.setSecretary("是".equals(getValue(values, columnIndex, "issecretary")));
+        villageLevel.setStationedLeader("是".equals(getValue(values, columnIndex, "isstationedleader")));
+        
+        if (!villageLevel.getVillageName().isEmpty() || !villageLevel.getPosition().isEmpty()) {
+            info.setVillageLevel(villageLevel);
+        }
+        
+        // 多身份
+        info.setHasMultipleIdentities("是".equals(getValue(values, columnIndex, "hasmultipleidentities")));
+        
+        // 系统字段
+        info.setStatus(getValue(values, columnIndex, "status"));
+        info.setCreateTime(getValue(values, columnIndex, "createtime"));
+        info.setUpdateTime(getValue(values, columnIndex, "updatetime"));
+        
+        return info;
+    }
+
+    /**
+     * 解析 CSV 值（处理引号转义）
+     */
+    private String[] parseCsvValues(String line) {
+        List<String> values = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+        
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            
+            if (c == '"') {
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    current.append('"');
+                    i++; // 跳过下一个引号
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (c == ',' && !inQuotes) {
+                values.add(current.toString().trim());
+                current = new StringBuilder();
+            } else {
+                current.append(c);
+            }
+        }
+        
+        values.add(current.toString().trim());
+        return values.toArray(new String[0]);
+    }
+
+    /**
+     * 安全获取 CSV 值
+     */
+    private String getValue(String[] values, Map<String, Integer> columnIndex, String columnName) {
+        Integer index = columnIndex.get(columnName.toLowerCase());
+        if (index != null && index < values.length) {
+            return values[index];
+        }
+        return "";
+    }
+
+    /**
+     * 建立姓名索引
+     */
+    private void indexPersonnel(PersonnelInfo info) {
+        String name = info.getName().toLowerCase();
+        if (nameIndex.containsKey(name)) {
+            // 重名情况，在原有对象后追加（实际应用中可用 List 存储）
+            System.out.println("发现重名：" + info.getName());
+        }
+        nameIndex.put(name, info);
+    }
+
+    // ==================== 功能 2: 根据姓名搜索人员 ====================
+    
+    /**
+     * 根据人员姓名搜索详细信息
+     * @param name 姓名
+     * @return 找到返回 PersonnelInfo，否则返回 null
+     */
+    public PersonnelInfo searchByName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return null;
+        }
+        
+        PersonnelInfo info = nameIndex.get(name.trim().toLowerCase());
+        if (info != null) {
+            System.out.println("找到人员：" + info.getName() + " - " + info.getPersonnelType().getDisplayName());
+        } else {
+            System.out.println("未找到人员：" + name);
+        }
+        return info;
+    }
+
+    /**
+     * 模糊搜索（支持部分匹配）
+     * @param namePart 姓名部分
+     * @return 匹配的人员列表
+     */
+    public List<PersonnelInfo> searchByNameFuzzy(String namePart) {
+        List<PersonnelInfo> results = new ArrayList<>();
+        if (namePart == null || namePart.trim().isEmpty()) {
+            return results;
+        }
+        
+        String searchKey = namePart.trim().toLowerCase();
+        for (PersonnelInfo info : personnelList) {
+            if (info.getName().toLowerCase().contains(searchKey)) {
+                results.add(info);
+            }
+        }
+        
+        System.out.println("模糊搜索 '" + namePart + "' 找到 " + results.size() + " 条结果");
+        return results;
+    }
+
+    // ==================== 拼音搜索功能 ====================
+    
+    /**
+     * 拼音搜索（支持全拼、首字母、中文混合搜索）
+     * 例如：输入 "zhang"、"zs"、"张" 都能搜索到 "张三"
+     * 
+     * @param query 查询词（中文、拼音或首字母）
+     * @return 匹配的人员列表
+     */
+    public List<PersonnelInfo> searchByPinyin(String query) {
+        List<PersonnelInfo> results = new ArrayList<>();
+        if (query == null || query.trim().isEmpty()) {
+            return results;
+        }
+        
+        String searchQuery = query.trim();
+        for (PersonnelInfo info : personnelList) {
+            String name = info.getName();
+            if (PinyinUtil.matches(name, searchQuery)) {
+                results.add(info);
+            }
+        }
+        
+        System.out.println("拼音搜索 '" + query + "' 找到 " + results.size() + " 条结果");
+        return results;
+    }
+    
+    /**
+     * 首字母搜索（快速搜索）
+     * 例如：输入 "zs" 搜索 "张三"，输入 "ls" 搜索 "李四"
+     * 
+     * @param initials 首字母（不区分大小写）
+     * @return 匹配的人员列表
+     */
+    public List<PersonnelInfo> searchByInitials(String initials) {
+        List<PersonnelInfo> results = new ArrayList<>();
+        if (initials == null || initials.trim().isEmpty()) {
+            return results;
+        }
+        
+        String searchKey = initials.trim().toLowerCase();
+        for (PersonnelInfo info : personnelList) {
+            String nameInitials = PinyinUtil.toInitialsLower(info.getName());
+            if (nameInitials.startsWith(searchKey)) {
+                results.add(info);
+            }
+        }
+        
+        System.out.println("首字母搜索 '" + initials + "' 找到 " + results.size() + " 条结果");
+        return results;
+    }
+    
+    /**
+     * 高级搜索（支持多字段组合搜索）
+     * 
+     * @param query 查询词
+     * @param searchName 是否搜索姓名
+     * @param searchPinyin 是否搜索拼音
+     * @param searchPosition 是否搜索职务
+     * @return 匹配的人员列表
+     */
+    public List<PersonnelInfo> advancedSearch(String query, boolean searchName, 
+                                               boolean searchPinyin, boolean searchPosition) {
+        List<PersonnelInfo> results = new ArrayList<>();
+        if (query == null || query.trim().isEmpty()) {
+            return results;
+        }
+        
+        String searchQuery = query.trim().toLowerCase();
+        
+        for (PersonnelInfo info : personnelList) {
+            boolean matched = false;
+            
+            // 姓名搜索
+            if (searchName && info.getName().toLowerCase().contains(searchQuery)) {
+                matched = true;
+            }
+            
+            // 拼音搜索
+            if (!matched && searchPinyin && PinyinUtil.matches(info.getName(), searchQuery)) {
+                matched = true;
+            }
+            
+            // 职务搜索
+            if (!matched && searchPosition) {
+                String position = info.getFullPosition().toLowerCase();
+                if (position.contains(searchQuery)) {
+                    matched = true;
+                }
+            }
+            
+            if (matched) {
+                results.add(info);
+            }
+        }
+        
+        System.out.println("高级搜索 '" + query + "' 找到 " + results.size() + " 条结果");
+        return results;
+    }
+
+    /**
+     * 按人员类型筛选
+     * @param type 人员类型
+     * @return 筛选结果列表
+     */
+    public List<PersonnelInfo> filterByType(PersonnelType type) {
+        List<PersonnelInfo> results = new ArrayList<>();
+        for (PersonnelInfo info : personnelList) {
+            if (info.getPersonnelType() == type) {
+                results.add(info);
+            }
+        }
+        return results;
+    }
+
+    // ==================== 功能 3: 新增/删除人员 ====================
+    
+    /**
+     * 新增人员
+     * @param info 人员信息结构体
+     * @return 成功返回 true
+     */
+    public boolean addPersonnel(PersonnelInfo info) {
+        if (info == null || info.getName() == null) {
+            System.out.println("人员信息不能为空");
+            return false;
+        }
+        
+        // 设置时间戳
+        String now = dateFormat.format(new Date());
+        info.setCreateTime(now);
+        info.setUpdateTime(now);
+        info.setStatus("NORMAL");
+        
+        // 生成 ID（如果没有）
+        if (info.getId() == null || info.getId().isEmpty()) {
+            info.setId(UUID.randomUUID().toString().replace("-", ""));
+        }
+        
+        // 添加到内存
+        personnelList.add(info);
+        indexPersonnel(info);
+        
+        // 保存到 CSV
+        return saveToCsv();
+    }
+
+    /**
+     * 删除人员（按姓名）
+     * @param name 姓名
+     * @return 成功返回 true
+     */
+    public boolean removePersonnelByName(String name) {
+        PersonnelInfo info = searchByName(name);
+        if (info == null) {
+            System.out.println("未找到要删除的人员：" + name);
+            return false;
+        }
+        
+        return removePersonnel(info);
+    }
+
+    /**
+     * 删除人员（按人员信息结构体）
+     * @param info 人员信息结构体
+     * @return 成功返回 true
+     */
+    public boolean removePersonnel(PersonnelInfo info) {
+        if (info == null) {
+            return false;
+        }
+        
+        // 从内存移除
+        boolean removed = personnelList.remove(info);
+        if (removed) {
+            nameIndex.remove(info.getName().toLowerCase());
+            info.setStatus("DELETED");
+            System.out.println("成功删除人员：" + info.getName());
+        }
+        
+        // 保存到 CSV
+        return saveToCsv();
+    }
+
+    /**
+     * 更新人员信息
+     * @param info 更新后的人员信息结构体
+     * @return 成功返回 true
+     */
+    public boolean updatePersonnel(PersonnelInfo info) {
+        if (info == null || info.getId() == null) {
+            return false;
+        }
+        
+        // 查找原记录
+        PersonnelInfo existing = null;
+        for (PersonnelInfo p : personnelList) {
+            if (p.getId().equals(info.getId())) {
+                existing = p;
+                break;
+            }
+        }
+        
+        if (existing == null) {
+            System.out.println("未找到要更新的人员 ID: " + info.getId());
+            return false;
+        }
+        
+        // 更新信息
+        info.setUpdateTime(dateFormat.format(new Date()));
+        
+        // 从索引移除旧记录
+        nameIndex.remove(existing.getName().toLowerCase());
+        
+        // 替换记录
+        int index = personnelList.indexOf(existing);
+        personnelList.set(index, info);
+        
+        // 重新建立索引
+        indexPersonnel(info);
+        
+        System.out.println("成功更新人员：" + info.getName());
+        return saveToCsv();
+    }
+
+    // ==================== 功能 4: 导出全部人员信息到 CSV ====================
+    
+    /**
+     * 导出全部人员信息到 CSV 文件
+     * @return 成功返回 true
+     */
+    public boolean exportToCsv() {
+        return saveToCsv();
+    }
+
+    /**
+     * 导出全部人员信息到指定 CSV 文件
+     * @param filePath 文件路径
+     * @return 成功返回 true
+     */
+    public boolean exportToCsv(String filePath) {
+        String originalPath = csvFilePath;
+        csvFilePath = filePath;
+        boolean result = saveToCsv();
+        csvFilePath = originalPath;
+        return result;
+    }
+
+    /**
+     * 保存数据到 CSV 文件
+     */
+    private boolean saveToCsv() {
+        File file = new File(csvFilePath);
+        
+        // 确保父目录存在
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
+        }
+        
+        try (BufferedWriter writer = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
+            
+            // 写入表头
+            writer.write(getCsvHeader());
+            writer.newLine();
+            
+            // 写入数据行
+            for (PersonnelInfo info : personnelList) {
+                if ("NORMAL".equals(info.getStatus()) || "UPDATED".equals(info.getStatus())) {
+                    writer.write(info.toCsvRow());
+                    writer.newLine();
+                }
+            }
+            
+            System.out.println("成功保存 " + personnelList.size() + " 条记录到：" + csvFilePath);
+            return true;
+            
+        } catch (IOException e) {
+            System.out.println("保存 CSV 文件失败：" + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * 获取 CSV 表头
+     */
+    private String getCsvHeader() {
+        return "id,name,gender,birthDate,ethnicity,politicalStatus,education,major,workStartDate,phone," +
+               "personnelType,townName,department,position,rank,isVillageLeader,stationedVillages," +
+               "villageName,villageType,villagePosition,hasMultipleIdentities,status,createTime,updateTime";
+    }
+
+    // ==================== 辅助方法 ====================
+    
+    /**
+     * 获取所有人员列表
+     */
+    public List<PersonnelInfo> getAllPersonnel() {
+        return new ArrayList<>(personnelList);
+    }
+
+    /**
+     * 获取人员总数
+     */
+    public int getCount() {
+        return personnelList.size();
+    }
+
+    /**
+     * 按人员类型分组统计
+     */
+    public Map<PersonnelType, Integer> getCountByType() {
+        Map<PersonnelType, Integer> stats = new HashMap<>();
+        for (PersonnelInfo info : personnelList) {
+            PersonnelType type = info.getPersonnelType();
+            if (type != null) {
+                stats.put(type, stats.getOrDefault(type, 0) + 1);
+            }
+        }
+        return stats;
+    }
+
+    /**
+     * 获取所有驻村领导（自动排序到村两委列表首位）
+     */
+    public List<PersonnelInfo> getVillageLeaders() {
+        List<PersonnelInfo> leaders = new ArrayList<>();
+        for (PersonnelInfo info : personnelList) {
+            if (info.isVillageLeader()) {
+                leaders.add(info);
+            }
+        }
+        return leaders;
+    }
+
+    /**
+     * 清空内存数据
+     */
+    public void clear() {
+        personnelList.clear();
+        nameIndex.clear();
+    }
+}

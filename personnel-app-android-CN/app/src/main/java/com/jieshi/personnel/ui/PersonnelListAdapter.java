@@ -1,0 +1,94 @@
+package com.jieshi.personnel.ui;
+
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.card.MaterialCardView;
+import com.jieshi.personnel.R;
+import com.jieshi.personnel.model.PersonnelInfo;
+
+import java.io.File;
+import java.util.List;
+
+/**
+ * 人员列表适配器（三级菜单）
+ */
+public class PersonnelListAdapter extends RecyclerView.Adapter<PersonnelListAdapter.ViewHolder> {
+    
+    private List<PersonnelInfo> dataList;
+    private Context context;
+    
+    public PersonnelListAdapter(List<PersonnelInfo> dataList, Context context) {
+        this.dataList = dataList;
+        this.context = context;
+    }
+    
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_personnel_list, parent, false);
+        return new ViewHolder(view);
+    }
+    
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        PersonnelInfo info = dataList.get(position);
+        
+        holder.tvName.setText(info.getName());
+        holder.tvPosition.setText(info.getFullPosition());
+        
+        // 加载头像
+        if (info.getAvatarPath() != null && !info.getAvatarPath().isEmpty()) {
+            File avatarFile = new File(info.getAvatarPath());
+            if (avatarFile.exists()) {
+                Bitmap bitmap = BitmapFactory.decodeFile(avatarFile.getAbsolutePath());
+                if (bitmap != null) {
+                    holder.ivAvatar.setImageBitmap(bitmap);
+                } else {
+                    holder.ivAvatar.setImageResource(R.drawable.ic_avatar_placeholder);
+                }
+            } else {
+                holder.ivAvatar.setImageResource(R.drawable.ic_avatar_placeholder);
+            }
+        } else {
+            holder.ivAvatar.setImageResource(R.drawable.ic_avatar_placeholder);
+        }
+        
+        // 点击查看详情
+        holder.cardView.setOnClickListener(v -> {
+            Intent intent = new Intent(context, DetailActivity.class);
+            intent.putExtra("personnel_id", info.getId());
+            context.startActivity(intent);
+        });
+    }
+    
+    @Override
+    public int getItemCount() {
+        return dataList.size();
+    }
+    
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        ImageView ivAvatar;
+        TextView tvName, tvPosition;
+        MaterialCardView cardView;
+        
+        ViewHolder(View itemView) {
+            super(itemView);
+            ivAvatar = itemView.findViewById(R.id.ivAvatar);
+            tvName = itemView.findViewById(R.id.tvName);
+            tvPosition = itemView.findViewById(R.id.tvPosition);
+            cardView = itemView.findViewById(R.id.cardView);
+        }
+    }
+}

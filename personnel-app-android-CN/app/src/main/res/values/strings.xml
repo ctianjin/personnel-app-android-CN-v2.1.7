@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ==================== 应用名称 ==================== -->
+    <string name="app_name">碣石人事管理</string>
+
+    <!-- ==================== 界面标题 ==================== -->
+    <string name="title_activity_main">人员列表</string>
+    <string name="title_activity_detail">人员详情</string>
+    <string name="title_activity_edit">编辑人员</string>
+    <string name="title_activity_sync">数据同步</string>
+    <string name="title_activity_settings">设置</string>
+
+    <!-- ==================== 菜单项 ==================== -->
+    <string name="menu_add">新增</string>
+    <string name="menu_search">搜索</string>
+    <string name="menu_export">导出</string>
+    <string name="menu_import">导入</string>
+    <string name="menu_sync">同步</string>
+    <string name="menu_settings">设置</string>
+    <string name="menu_delete">删除</string>
+    <string name="menu_edit">编辑</string>
+
+    <!-- ==================== 搜索提示 ==================== -->
+    <string name="search_hint">搜索姓名/拼音/首字母</string>
+    <string name="search_empty">暂无搜索结果</string>
+    <string name="search_no_results">未找到匹配的人员</string>
+
+    <!-- ==================== 空状态 ==================== -->
+    <string name="empty_personnel">暂无人员信息</string>
+    <string name="empty_work_experience">暂无履历信息</string>
+    <string name="empty_award">暂无奖惩记录</string>
+    <string name="empty_family">暂无家庭成员信息</string>
+
+    <!-- ==================== 按钮文本 ==================== -->
+    <string name="btn_save">保存</string>
+    <string name="btn_cancel">取消</string>
+    <string name="btn_confirm">确认</string>
+    <string name="btn_delete">删除</string>
+    <string name="btn_edit">编辑</string>
+    <string name="btn_add">添加</string>
+    <string name="btn_search">搜索</string>
+    <string name="btn_refresh">刷新</string>
+    <string name="btn_sync_now">立即同步</string>
+    <string name="btn_export">导出</string>
+    <string name="btn_import">导入</string>
+
+    <!-- ==================== 提示信息 ==================== -->
+    <string name="msg_loading">加载中…</string>
+    <string name="msg_saving">保存中…</string>
+    <string name="msg_deleting">删除中…</string>
+    <string name="msg_syncing">同步中…</string>
+    <string name="msg_exporting">导出中…</string>
+    <string name="msg_importing">导入中…</string>
+
+    <!-- ==================== 成功提示 ==================== -->
+    <string name="msg_save_success">保存成功</string>
+    <string name="msg_delete_success">删除成功</string>
+    <string name="msg_sync_success">同步成功</string>
+    <string name="msg_export_success">导出成功</string>
+    <string name="msg_import_success">导入成功</string>
+
+    <!-- ==================== 错误提示 ==================== -->
+    <string name="msg_save_failed">保存失败</string>
+    <string name="msg_delete_failed">删除失败</string>
+    <string name="msg_sync_failed">同步失败</string>
+    <string name="msg_export_failed">导出失败</string>
+    <string name="msg_import_failed">导入失败</string>
+    <string name="msg_network_error">网络连接失败</string>
+    <string name="msg_permission_denied">权限被拒绝</string>
+    <string name="msg_file_not_found">文件不存在</string>
+
+    <!-- ==================== 确认对话框 ==================== -->
+    <string name="dialog_confirm_delete">确定要删除该人员吗？</string>
+    <string name="dialog_confirm_exit">确定要退出吗？</string>
+    <string name="dialog_title_confirm">确认</string>
+    <string name="dialog_title_warning">警告</string>
+    <string name="dialog_title_error">错误</string>
+
+    <!-- ==================== 字段标签 ==================== -->
+    <string name="label_basic_info">基本信息</string>
+    <string name="label_job_info">职务信息</string>
+    <string name="label_work_experience">工作履历</string>
+    <string name="label_award_punishment">奖惩记录</string>
+    <string name="label_family_member">近亲属信息</string>
+    
+    <string name="label_name">姓名</string>
+    <string name="label_gender">性别</string>
+    <string name="label_birth_date">出生日期</string>
+    <string name="label_ethnicity">民族</string>
+    <string name="label_political_status">政治面貌</string>
+    <string name="label_education">学历</string>
+    <string name="label_major">专业</string>
+    <string name="label_work_start_date">参加工作时间</string>
+    <string name="label_phone">联系电话</string>
+    <string name="label_id_card">身份证号</string>
+    <string name="label_address">现住址</string>
+    <string name="label_personnel_type">人员类型</string>
+    <string name="label_position">职务</string>
+    <string name="label_department">部门</string>
+    <string name="label_rank">职级</string>
+
+    <!-- ==================== 人员类型 ==================== -->
+    <string name="type_town_official">镇府干部</string>
+    <string name="type_village_cadre">村两委干部</string>
+    <string name="type_grid_defender">网格联防员</string>
+
+    <!-- ==================== 性别选项 ==================== -->
+    <string name="gender_male">男</string>
+    <string name="gender_female">女</string>
+
+    <!-- ==================== 同步相关 ==================== -->
+    <string name="sync_last_time">上次同步：%1$s</string>
+    <string name="sync_never">从未同步</string>
+    <string name="sync_uploading">正在上传：%1$d/%2$d</string>
+    <string name="sync_downloading">正在下载：%1$d/%2$d</string>
+    <string name="sync_conflict">发现冲突 %1$d 条</string>
+
+    <!-- ==================== 导入相关 ==================== -->
+    <string name="import_select_excel_title">1. 选择 Excel 文件</string>
+    <string name="import_select_excel_desc">选择标准数据更新模板（.xlsx 格式）</string>
+    <string name="import_excel_path_hint">Excel 文件路径</string>
+    <string name="import_btn_select_excel">选择 Excel 文件</string>
+
+    <string name="import_select_zip_title">2. 选择头像 ZIP 包（可选）</string>
+    <string name="import_select_zip_desc">头像图片命名为“身份证号.jpg”，压缩为 ZIP 格式</string>
+    <string name="import_zip_path_hint">ZIP 文件路径</string>
+    <string name="import_btn_select_zip">选择头像 ZIP 包</string>
+
+    <string name="import_instructions_title">填写说明</string>
+    <string name="import_instructions_content">• 多身份：在对应「是否 XX 干部」列标注“是”\n• 驻村领导：在「所属村（社区）」列填写多个村名（用英文逗号分隔）\n• 职位排序：在「单位内职位排序」列填写数字（1 为首位）\n• 头像匹配：图片命名为“身份证号.jpg”，与 Excel 同目录</string>
+
+    <string name="import_progress_title">导入进度</string>
+    <string name="import_btn_start">开始导入</string>
+</resources>

@@ -1,0 +1,35 @@
+pluginManagement {
+    repositories {
+        // 阿里云镜像（中国用户推荐）
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+        
+        // 原始仓库（备用）
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        // 阿里云镜像（中国用户推荐）
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        
+        // 原始仓库（备用）
+        google()
+        mavenCentral()
+        
+        // JitPack (用于 rxpermissions, glide 等)
+        maven { url 'https://jitpack.io' }
+        
+        // Apache POI (用于 Excel 导入)
+        maven { url 'https://repository.apache.org/content/repositories/releases/' }
+    }
+}
+
+rootProject.name = "PersonnelApp"
+include ':app'

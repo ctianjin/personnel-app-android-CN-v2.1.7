@@ -1,0 +1,23 @@
+// Top-level build file for Personnel App
+buildscript {
+    ext.kotlin_version = '1.9.22'
+    repositories {
+        // 阿里云镜像（中国用户推荐）
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.4.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+// 仓库配置已统一在 settings.gradle 中
+// 避免重复配置导致冲突
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

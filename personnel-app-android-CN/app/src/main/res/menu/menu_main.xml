@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- 搜索 -->
+    <item
+        android:id="@+id/action_search"
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="@string/menu_search"
+        app:showAsAction="ifRoom"
+        app:actionViewClass="androidx.appcompat.widget.SearchView" />
+
+    <!-- 同步 -->
+    <item
+        android:id="@+id/action_sync"
+        android:icon="@android:drawable/ic_menu_rotate"
+        android:title="@string/menu_sync"
+        app:showAsAction="ifRoom" />
+
+    <!-- 更多菜单 -->
+    <item
+        android:id="@+id/action_more"
+        android:icon="@android:drawable/ic_menu_more"
+        android:title="更多"
+        app:showAsAction="never">
+
+        <menu>
+            <item
+                android:id="@+id/action_export"
+                android:icon="@android:drawable/ic_menu_save"
+                android:title="@string/menu_export" />
+
+            <item
+                android:id="@+id/action_import_"
+                android:icon="@android:drawable/ic_menu_upload"
+                android:title="@string/menu_import" />
+
+            <item
+                android:id="@+id/action_settings"
+                android:icon="@android:drawable/ic_menu_preferences"
+                android:title="@string/menu_settings" />
+        </menu>
+
+    </item>
+
+</menu>
