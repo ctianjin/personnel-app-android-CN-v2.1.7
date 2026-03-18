@@ -79,22 +79,15 @@ public class VillageListActivity extends AppCompatActivity {
                 villageList.add(village);
             }
             
-            // 显示数据数量
-            android.util.Log.d("VillageList", "Loaded " + villageList.size() + " villages");
+            System.out.println("✓ 加载村社区数据成功，共 " + villageList.size() + " 个");
         } catch (Exception e) {
+            System.err.println("✗ 加载村社区数据失败：" + e.getMessage());
             e.printStackTrace();
-            android.util.Log.e("VillageList", "Error loading villages: " + e.getMessage());
-            android.widget.Toast.makeText(this, "加载村社区数据失败：" + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-        }
-        
-        // 如果数据为空，显示提示
-        if (villageList.isEmpty()) {
-            android.widget.Toast.makeText(this, "村社区数据为空", android.widget.Toast.LENGTH_LONG).show();
         }
     }
     
     private void setupRecyclerView() {
-        // 3 列网格布局（根据设计图）
+        // 3 列网格布局
         GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
         recyclerView.setLayoutManager(layoutManager);
         

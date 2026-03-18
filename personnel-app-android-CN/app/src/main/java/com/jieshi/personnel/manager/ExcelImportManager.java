@@ -5,7 +5,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.jieshi.personnel.model.AwardPunishment;
+import com.jieshi.personnel.model.FamilyMember;
+import com.jieshi.personnel.model.GovernmentLevel;
 import com.jieshi.personnel.model.PersonnelInfo;
+import com.jieshi.personnel.model.PersonnelType;
+import com.jieshi.personnel.model.VillageLevel;
+import com.jieshi.personnel.model.WorkExperience;
 import com.jieshi.personnel.util.AvatarLoader;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -27,6 +33,13 @@ import java.util.Map;
 
 /**
  * Excel 导入管理器
+ * 
+ * 解析标准 Excel 模板，批量导入人员信息
+ * 支持多身份、驻村信息、头像自动匹配
+ * 
+ * @author 秋天 · 严谨专业版
+ * @version 1.0.0
+ * @since 2026-03-15
  */
 public class ExcelImportManager {
     
@@ -36,6 +49,9 @@ public class ExcelImportManager {
     private final Context context;
     private final Handler mainHandler;
     
+    /**
+     * 导入回调接口
+     */
     public interface ImportCallback {
         void onStart();
         void onProgress(int current, int total, String message);
@@ -43,11 +59,21 @@ public class ExcelImportManager {
         void onError(String error);
     }
     
+    /**
+     * 构造函数
+     */
     public ExcelImportManager(Context context) {
         this.context = context.getApplicationContext();
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
     
+    /**
+     * 从 Excel 文件导入
+     * 
+     * @param excelFile Excel 文件
+     * @param avatarZipPath 头像 ZIP 包路径（可选）
+     * @param callback 回调
+     */
     public void importFromExcel(final File excelFile, final String avatarZipPath, 
                                  final ImportCallback callback) {
         new Thread(() -> {
@@ -56,6 +82,9 @@ public class ExcelImportManager {
                     mainHandler.post(callback::onStart);
                 }
                 
+                Log.d(TAG, "开始导入 Excel: " + excelFile.getAbsolutePath());
+                
+                // 解析 Excel
                 List<PersonnelInfo> personnelList = parseExcel(excelFile, callback);
                 
                 if (personnelList == null || personnelList.isEmpty()) {
@@ -65,8 +94,19 @@ public class ExcelImportManager {
                     return;
                 }
                 
+                // 处理头像
                 if (avatarZipPath != null && !avatarZipPath.isEmpty()) {
+                    if (callback != null) {
+                        mainHandler.post(() -> 
+                            callback.onProgress(0, 0, "正在处理头像..."));
+                    }
                     processAvatars(personnelList, avatarZipPath);
+                }
+                
+                // 保存到数据库
+                if (callback != null) {
+                    mainHandler.post(() -> 
+                        callback.onProgress(0, personnelList.size(), "正在保存数据..."));
                 }
                 
                 String csvPath = new File(context.getFilesDir(), "personnel.csv").getAbsolutePath();
@@ -74,14 +114,16 @@ public class ExcelImportManager {
                 dataManager.loadFromCsv();
                 
                 int count = 0;
-                final int total = personnelList.size();
                 for (PersonnelInfo info : personnelList) {
+                    // 检查是否已存在
                     PersonnelInfo existing = dataManager.searchByName(info.getName());
                     if (existing != null && existing.getIdCard() != null && 
                         existing.getIdCard().equals(info.getIdCard())) {
+                        // 更新
                         info.setId(existing.getId());
                         dataManager.updatePersonnel(info);
                     } else {
+                        // 新增
                         dataManager.addPersonnel(info);
                     }
                     count++;
@@ -89,25 +131,33 @@ public class ExcelImportManager {
                     if (callback != null) {
                         final int finalCount = count;
                         mainHandler.post(() -> 
-                            callback.onProgress(finalCount, total, 
-                                "正在保存：" + finalCount + "/" + total));
+                            callback.onProgress(finalCount, personnelList.size(), 
+                                "正在保存：" + finalCount + "/" + personnelList.size()));
                     }
                 }
                 
-                final int finalTotal = count;
+                Log.d(TAG, "导入完成，共 " + count + " 条记录");
+                
                 if (callback != null) {
+                    final int totalCount = count;
                     mainHandler.post(() -> 
-                        callback.onSuccess(finalTotal, "成功导入 " + finalTotal + " 条人员信息"));
+                        callback.onSuccess(totalCount, "成功导入 " + totalCount + " 条人员信息"));
                 }
                 
             } catch (Exception e) {
+                Log.e(TAG, "导入失败：" + e.getMessage());
+                e.printStackTrace();
                 if (callback != null) {
-                    mainHandler.post(() -> callback.onError("导入失败：" + e.getMessage()));
+                    mainHandler.post(() -> 
+                        callback.onError("导入失败：" + e.getMessage()));
                 }
             }
         }).start();
     }
     
+    /**
+     * 解析 Excel 文件
+     */
     private List<PersonnelInfo> parseExcel(File excelFile, ImportCallback callback) 
             throws IOException {
         List<PersonnelInfo> list = new ArrayList<>();
@@ -116,51 +166,164 @@ public class ExcelImportManager {
              Workbook workbook = new XSSFWorkbook(fis)) {
             
             Sheet sheet = workbook.getSheetAt(0);
-            final int totalRows = sheet.getLastRowNum() + 1;
+            int totalRows = sheet.getLastRowNum() + 1;
             
+            // 读取表头
             Row headerRow = sheet.getRow(0);
-            if (headerRow == null) throw new IOException("Excel 文件没有表头");
+            if (headerRow == null) {
+                throw new IOException("Excel 文件没有表头");
+            }
             
             Map<String, Integer> columnIndex = parseHeader(headerRow);
             
+            // 逐行读取数据
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
                 
-                PersonnelInfo info = parseRow(row, columnIndex);
-                if (info != null) list.add(info);
-                
-                if (callback != null) {
-                    final int current = i;
-                    mainHandler.post(() -> 
-                        callback.onProgress(current, totalRows, "正在解析..."));
+                try {
+                    PersonnelInfo info = parseRow(row, columnIndex);
+                    if (info != null) {
+                        list.add(info);
+                    }
+                    
+                    if (callback != null) {
+                        final int current = i;
+                        mainHandler.post(() -> 
+                            callback.onProgress(current, totalRows, 
+                                "正在解析：" + current + "/" + totalRows));
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "第 " + (i + 1) + " 行解析失败：" + e.getMessage());
                 }
             }
         }
+        
         return list;
     }
     
+    /**
+     * 解析表头
+     */
     private Map<String, Integer> parseHeader(Row headerRow) {
         Map<String, Integer> columnIndex = new HashMap<>();
+        
         for (int i = 0; i < headerRow.getLastCellNum(); i++) {
             Cell cell = headerRow.getCell(i);
             if (cell != null) {
-                columnIndex.put(cell.getStringCellValue().trim().toLowerCase(), i);
+                String columnName = cell.getStringCellValue().trim();
+                columnIndex.put(columnName.toLowerCase(), i);
             }
         }
+        
         return columnIndex;
     }
     
+    /**
+     * 解析数据行
+     */
     private PersonnelInfo parseRow(Row row, Map<String, Integer> columnIndex) {
         PersonnelInfo info = new PersonnelInfo();
         
+        // 基本信息
+        info.setId(getCellValue(row, columnIndex, "id"));
         info.setName(getCellValue(row, columnIndex, "姓名"));
         info.setGender(getCellValue(row, columnIndex, "性别"));
-        info.setIdCard(getCellValue(row, columnIndex, "身份证号"));
+        info.setBirthDate(getCellValue(row, columnIndex, "出生日期"));
+        info.setEthnicity(getCellValue(row, columnIndex, "民族"));
+        info.setPoliticalStatus(getCellValue(row, columnIndex, "政治面貌"));
+        info.setEducation(getCellValue(row, columnIndex, "学历"));
+        info.setMajor(getCellValue(row, columnIndex, "专业"));
+        info.setWorkStartDate(getCellValue(row, columnIndex, "参加工作时间"));
         info.setPhone(getCellValue(row, columnIndex, "联系电话"));
+        info.setIdCard(getCellValue(row, columnIndex, "身份证号"));
         info.setAddress(getCellValue(row, columnIndex, "现住址"));
+        info.setComment(getCellValue(row, columnIndex, "简要评价"));
         
+        // 身份标识（同时设置布尔标志和 personnelType 枚举）
+        boolean isTownOfficial = "是".equals(getCellValue(row, columnIndex, "是否镇府干部"));
+        boolean isVillageCadre = "是".equals(getCellValue(row, columnIndex, "是否村两委干部"));
+        boolean isGridDefender = "是".equals(getCellValue(row, columnIndex, "是否网格联防员"));
+        
+        info.setTownOfficial(isTownOfficial);
+        info.setVillageCadre(isVillageCadre);
+        info.setGridDefender(isGridDefender);
+        
+        // 设置 personnelType 枚举（用于 CSV 持久化）
+        if (isTownOfficial) {
+            info.setPersonnelType(com.jieshi.personnel.model.PersonnelType.TOWN_OFFICIAL);
+        } else if (isVillageCadre) {
+            info.setPersonnelType(com.jieshi.personnel.model.PersonnelType.VILLAGE_COMMITTEE);
+        } else if (isGridDefender) {
+            info.setPersonnelType(com.jieshi.personnel.model.PersonnelType.GRID_DEFENDER);
+        }
+        
+        info.checkMultipleIdentities();
+        
+        // 镇府干部信息
+        info.setInstitution(getCellValue(row, columnIndex, "所属内设机构"));
+        String positionOrderStr = getCellValue(row, columnIndex, "单位内职位排序");
+        if (!positionOrderStr.isEmpty()) {
+            try {
+                info.setPositionOrder(Integer.parseInt(positionOrderStr));
+            } catch (NumberFormatException e) {
+                info.setPositionOrder(999);
+            }
+        }
+        
+        // 驻村信息
+        String stationedVillages = getCellValue(row, columnIndex, "所属村（社区）");
+        if (!stationedVillages.isEmpty()) {
+            info.setStationedVillagesStr(stationedVillages.replace(",", ",").replace(" ", ""));
+        }
+        
+        // 村社区信息
+        info.setVillageCommunity(getCellValue(row, columnIndex, "所属村（社区）"));
+        
+        // 履历信息（多行文本）
+        String workExperiencesStr = getCellValue(row, columnIndex, "工作履历");
+        if (!workExperiencesStr.isEmpty()) {
+            String[] experiences = workExperiencesStr.split("\n");
+            for (String exp : experiences) {
+                if (!exp.trim().isEmpty()) {
+                    WorkExperience expInfo = new WorkExperience();
+                    expInfo.setDescription(exp.trim());
+                    info.addWorkExperience(expInfo);
+                }
+            }
+        }
+        
+        // 奖惩信息
+        String awardsStr = getCellValue(row, columnIndex, "奖惩记录");
+        if (!awardsStr.isEmpty()) {
+            String[] awards = awardsStr.split("\n");
+            for (String award : awards) {
+                if (!award.trim().isEmpty()) {
+                    AwardPunishment ap = new AwardPunishment();
+                    ap.setDescription(award.trim());
+                    info.addAwardPunishment(ap);
+                }
+            }
+        }
+        
+        // 家庭成员
+        String familyStr = getCellValue(row, columnIndex, "近亲属信息");
+        if (!familyStr.isEmpty()) {
+            String[] families = familyStr.split("\n");
+            for (String family : families) {
+                if (!family.trim().isEmpty()) {
+                    FamilyMember fm = new FamilyMember();
+                    fm.setName(family.trim());
+                    info.addFamilyMember(fm);
+                }
+            }
+        }
+        
+        // 系统字段
         String now = new SimpleDateFormat(DATE_FORMAT, Locale.CHINA).format(new Date());
+        if (info.getId() == null || info.getId().isEmpty()) {
+            info.setId(java.util.UUID.randomUUID().toString().replace("-", ""));
+        }
         info.setCreateTime(now);
         info.setUpdateTime(now);
         info.setStatus("NORMAL");
@@ -168,27 +331,56 @@ public class ExcelImportManager {
         return info;
     }
     
+    /**
+     * 获取单元格值
+     */
     private String getCellValue(Row row, Map<String, Integer> columnIndex, String columnName) {
         Integer index = columnIndex.get(columnName.toLowerCase());
-        if (index == null) return "";
+        if (index == null) {
+            return "";
+        }
+        
         Cell cell = row.getCell(index);
-        if (cell == null) return "";
+        if (cell == null) {
+            return "";
+        }
         
         switch (cell.getCellType()) {
-            case STRING: return cell.getStringCellValue().trim();
-            case NUMERIC: return String.valueOf(cell.getNumericCellValue());
-            default: return "";
+            case STRING:
+                return cell.getStringCellValue().trim();
+            case NUMERIC:
+                if (org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(cell)) {
+                    return new SimpleDateFormat(DATE_FORMAT, Locale.CHINA)
+                            .format(cell.getDateCellValue());
+                }
+                double num = cell.getNumericCellValue();
+                if (num == (long) num) {
+                    return String.valueOf((long) num);
+                }
+                return String.valueOf(num);
+            case BOOLEAN:
+                return cell.getBooleanCellValue() ? "是" : "否";
+            default:
+                return "";
         }
     }
     
+    /**
+     * 处理头像匹配
+     */
     private void processAvatars(List<PersonnelInfo> personnelList, String avatarZipPath) {
         try {
+            // 解压 ZIP
             String avatarDir = new File(context.getFilesDir(), "avatars").getAbsolutePath();
             AvatarLoader.extractAvatarZip(avatarZipPath, avatarDir);
+            
+            // 匹配头像
             for (PersonnelInfo info : personnelList) {
                 if (info.getIdCard() != null && !info.getIdCard().isEmpty()) {
                     String avatarPath = AvatarLoader.getAvatarPath(info.getIdCard(), avatarDir);
-                    if (avatarPath != null) info.setAvatarPath(avatarPath);
+                    if (avatarPath != null) {
+                        info.setAvatarPath(avatarPath);
+                    }
                 }
             }
         } catch (Exception e) {

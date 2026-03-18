@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "24fce78e6e4657104c706b8852a143b4",
+    "identityHash": "ed7009c60a32cfd02065256a131ee66c",
     "entities": [
       {
         "tableName": "personnel",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT, `gender` TEXT, `birth_date` TEXT, `ethnicity` TEXT, `political_status` TEXT, `education` TEXT, `major` TEXT, `work_start_date` TEXT, `phone` TEXT, `id_card` TEXT, `address` TEXT, `personnel_type` TEXT, `town_name` TEXT, `department` TEXT, `position` TEXT, `rank` TEXT, `is_village_leader` INTEGER NOT NULL, `village_name` TEXT, `village_type` TEXT, `village_position` TEXT, `has_multiple_identities` INTEGER NOT NULL, `status` TEXT, `create_time` TEXT, `update_time` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT, `gender` TEXT, `birth_date` TEXT, `ethnicity` TEXT, `political_status` TEXT, `education` TEXT, `major` TEXT, `work_start_date` TEXT, `phone` TEXT, `id_card` TEXT, `native_place` TEXT, `address` TEXT, `personnel_type` TEXT, `town_name` TEXT, `department` TEXT, `position` TEXT, `rank` TEXT, `is_village_leader` INTEGER NOT NULL, `village_name` TEXT, `village_type` TEXT, `village_position` TEXT, `has_multiple_identities` INTEGER NOT NULL, `status` TEXT, `create_time` TEXT, `update_time` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -71,6 +71,12 @@
           {
             "fieldPath": "idCard",
             "columnName": "id_card",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "nativePlace",
+            "columnName": "native_place",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -172,7 +178,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '24fce78e6e4657104c706b8852a143b4')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ed7009c60a32cfd02065256a131ee66c')"
     ]
   }
 }

@@ -21,8 +21,10 @@ public class PersonnelInfo {
     private String workStartDate;
     private String idCard;
     private String phone;
-    private String address;
+    /** 籍贯 */
     private String nativePlace;
+    /** 现住址 */
+    private String address;
     private String avatarPath;
     private String comment;
 
@@ -44,9 +46,13 @@ public class PersonnelInfo {
     private String villageCommunity;
     private VillageLevel villageLevel;
 
-    // ==================== 关联列表 ====================
+    // ==================== 履历信息 ====================
     private List<WorkExperience> workExperiences;
+
+    // ==================== 奖惩信息 ====================
     private List<AwardPunishment> awardPunishments;
+
+    // ==================== 家庭信息 ====================
     private List<FamilyMember> familyMembers;
 
     // ==================== 系统字段 ====================
@@ -71,16 +77,29 @@ public class PersonnelInfo {
 
     public PersonnelInfo(String name, PersonnelType personnelType) {
         this(name);
-        this.personnelType = personnelType;
+        setPersonnelType(personnelType);
     }
-
-    // ==================== 业务方法 ====================
 
     public boolean isVillageLeader() {
         return governmentLevel != null && governmentLevel.isVillageLeader();
     }
 
-    public void parseStationedVillages() {
+    public boolean isStationedInVillage(String villageName) {
+        if (stationedVillages == null) {
+            parseStationedVillages();
+        }
+        if (stationedVillages == null || stationedVillages.isEmpty()) {
+            return false;
+        }
+        for (String village : stationedVillages) {
+            if (village != null && village.trim().equals(villageName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void parseStationedVillages() {
         if (stationedVillagesStr == null || stationedVillagesStr.trim().isEmpty()) {
             stationedVillages = new ArrayList<>();
             return;
@@ -102,19 +121,13 @@ public class PersonnelInfo {
         return stationedVillages;
     }
 
-    public boolean isStationedInVillage(String villageName) {
-        if (stationedVillages == null) {
-            parseStationedVillages();
-        }
-        if (stationedVillages == null || stationedVillages.isEmpty()) {
-            return false;
-        }
-        for (String village : stationedVillages) {
-            if (village != null && village.trim().equals(villageName)) {
-                return true;
-            }
-        }
-        return false;
+    public void setStationedVillagesStr(String villagesStr) {
+        this.stationedVillagesStr = villagesStr;
+        this.stationedVillages = null;
+    }
+
+    public String getStationedVillagesStr() {
+        return stationedVillagesStr;
     }
 
     public void checkMultipleIdentities() {
@@ -125,42 +138,13 @@ public class PersonnelInfo {
         this.hasMultipleIdentities = (count > 1);
     }
 
-    public String toCsvRow() {
-        return String.format("%s,%s,%s,%s,%s,%s\n", 
-            id, name, gender, idCard, phone, 
-            personnelType != null ? personnelType.getDisplayName() : "");
-    }
-
-    public String getFullPosition() {
-        StringBuilder sb = new StringBuilder();
-        if (institution != null && !institution.isEmpty()) {
-            sb.append(institution);
-        }
-        if (governmentLevel != null) {
-            if (sb.length() > 0) sb.append(" / ");
-            sb.append(governmentLevel.getPosition());
-        }
-        if (villageLevel != null) {
-            if (sb.length() > 0) sb.append(" / ");
-            sb.append(villageLevel.getVillageName())
-              .append(villageLevel.getPosition());
-        }
-        return sb.length() > 0 ? sb.toString() : "未分配职务";
-    }
-
-    public void addWorkExperience(WorkExperience exp) {
-        if (this.workExperiences == null) this.workExperiences = new ArrayList<>();
-        this.workExperiences.add(exp);
-    }
-
-    public void addAwardPunishment(AwardPunishment ap) {
-        if (this.awardPunishments == null) this.awardPunishments = new ArrayList<>();
-        this.awardPunishments.add(ap);
-    }
-
-    public void addFamilyMember(FamilyMember fm) {
-        if (this.familyMembers == null) this.familyMembers = new ArrayList<>();
-        this.familyMembers.add(fm);
+    public String getIdentityDescription() {
+        List<String> identities = new ArrayList<>();
+        if (isTownOfficial) identities.add("镇府干部");
+        if (isVillageCadre) identities.add("村两委干部");
+        if (isGridDefender) identities.add("网格联防员");
+        if (identities.isEmpty()) return "未知身份";
+        return String.join(" + ", identities);
     }
 
     // ==================== Getters and Setters ====================
@@ -198,11 +182,11 @@ public class PersonnelInfo {
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
 
+    public String getNativePlace() { return nativePlace; }
+    public void setNativePlace(String nativePlace) { this.nativePlace = nativePlace; }
+
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
-
-    public String getNativePlace() { return nativePlace != null ? nativePlace : address; }
-    public void setNativePlace(String nativePlace) { this.nativePlace = nativePlace; }
 
     public String getAvatarPath() { return avatarPath; }
     public void setAvatarPath(String avatarPath) { this.avatarPath = avatarPath; }
@@ -210,20 +194,27 @@ public class PersonnelInfo {
     public String getComment() { return comment; }
     public void setComment(String comment) { this.comment = comment; }
 
-    public PersonnelType getPersonnelType() { return personnelType; }
-    public void setPersonnelType(PersonnelType personnelType) { this.personnelType = personnelType; }
-
     public boolean isTownOfficial() { return isTownOfficial; }
-    public void setTownOfficial(boolean townOfficial) { this.isTownOfficial = townOfficial; }
+    public void setTownOfficial(boolean townOfficial) { isTownOfficial = townOfficial; }
 
     public boolean isVillageCadre() { return isVillageCadre; }
-    public void setVillageCadre(boolean villageCadre) { this.isVillageCadre = villageCadre; }
+    public void setVillageCadre(boolean villageCadre) { isVillageCadre = villageCadre; }
 
     public boolean isGridDefender() { return isGridDefender; }
-    public void setGridDefender(boolean gridDefender) { this.isGridDefender = gridDefender; }
+    public void setGridDefender(boolean gridDefender) { isGridDefender = gridDefender; }
 
     public boolean hasMultipleIdentities() { return hasMultipleIdentities; }
     public void setHasMultipleIdentities(boolean hasMultipleIdentities) { this.hasMultipleIdentities = hasMultipleIdentities; }
+
+    public PersonnelType getPersonnelType() { return personnelType; }
+    public void setPersonnelType(PersonnelType personnelType) {
+        this.personnelType = personnelType;
+        if (personnelType != null) {
+            this.isTownOfficial = (personnelType == PersonnelType.TOWN_OFFICIAL);
+            this.isVillageCadre = (personnelType == PersonnelType.VILLAGE_COMMITTEE);
+            this.isGridDefender = (personnelType == PersonnelType.GRID_DEFENDER);
+        }
+    }
 
     public String getInstitution() { return institution; }
     public void setInstitution(String institution) { this.institution = institution; }
@@ -234,12 +225,6 @@ public class PersonnelInfo {
     public GovernmentLevel getGovernmentLevel() { return governmentLevel; }
     public void setGovernmentLevel(GovernmentLevel governmentLevel) { this.governmentLevel = governmentLevel; }
 
-    public String getStationedVillagesStr() { return stationedVillagesStr; }
-    public void setStationedVillagesStr(String stationedVillagesStr) {
-        this.stationedVillagesStr = stationedVillagesStr;
-        this.stationedVillages = null;
-    }
-
     public String getVillageCommunity() { return villageCommunity; }
     public void setVillageCommunity(String villageCommunity) { this.villageCommunity = villageCommunity; }
 
@@ -248,12 +233,15 @@ public class PersonnelInfo {
 
     public List<WorkExperience> getWorkExperiences() { return workExperiences; }
     public void setWorkExperiences(List<WorkExperience> workExperiences) { this.workExperiences = workExperiences; }
+    public void addWorkExperience(WorkExperience exp) { this.workExperiences.add(exp); }
 
     public List<AwardPunishment> getAwardPunishments() { return awardPunishments; }
     public void setAwardPunishments(List<AwardPunishment> awardPunishments) { this.awardPunishments = awardPunishments; }
+    public void addAwardPunishment(AwardPunishment ap) { this.awardPunishments.add(ap); }
 
     public List<FamilyMember> getFamilyMembers() { return familyMembers; }
     public void setFamilyMembers(List<FamilyMember> familyMembers) { this.familyMembers = familyMembers; }
+    public void addFamilyMember(FamilyMember fm) { this.familyMembers.add(fm); }
 
     public String getCreateTime() { return createTime; }
     public void setCreateTime(String createTime) { this.createTime = createTime; }
@@ -264,11 +252,70 @@ public class PersonnelInfo {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public String getIdentityDescription() {
-        List<String> identities = new ArrayList<>();
-        if (isTownOfficial) identities.add("镇府干部");
-        if (isVillageCadre) identities.add("村两委干部");
-        if (isGridDefender) identities.add("网格联防员");
-        return identities.isEmpty() ? "未知身份" : String.join(" + ", identities);
+    public String getFullPosition() {
+        StringBuilder sb = new StringBuilder();
+        if (institution != null && !institution.isEmpty()) sb.append(institution);
+        if (governmentLevel != null) {
+            if (sb.length() > 0) sb.append(" / ");
+            sb.append(governmentLevel.getPosition());
+        }
+        if (villageLevel != null) {
+            if (sb.length() > 0) sb.append(" / ");
+            sb.append(villageLevel.getVillageName()).append(villageLevel.getPosition());
+        }
+        return sb.length() > 0 ? sb.toString() : "未分配职务";
+    }
+
+    public String toCsvRow() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(escapeCsv(id)).append(",");
+        sb.append(escapeCsv(name)).append(",");
+        sb.append(escapeCsv(gender)).append(",");
+        sb.append(escapeCsv(birthDate)).append(",");
+        sb.append(escapeCsv(ethnicity)).append(",");
+        sb.append(escapeCsv(politicalStatus)).append(",");
+        sb.append(escapeCsv(education)).append(",");
+        sb.append(escapeCsv(major)).append(",");
+        sb.append(escapeCsv(workStartDate)).append(",");
+        sb.append(escapeCsv(phone)).append(",");
+        sb.append(escapeCsv(idCard)).append(",");
+        sb.append(escapeCsv(nativePlace)).append(",");
+        sb.append(escapeCsv(address)).append(",");
+        
+        sb.append(personnelType != null ? personnelType.getDisplayName() : "").append(",");
+        
+        if (governmentLevel != null) {
+            sb.append(escapeCsv(governmentLevel.getTownName())).append(",");
+            sb.append(escapeCsv(governmentLevel.getDepartment())).append(",");
+            sb.append(escapeCsv(governmentLevel.getPosition())).append(",");
+            sb.append(escapeCsv(governmentLevel.getRank())).append(",");
+            sb.append(governmentLevel.isVillageLeader() ? "是" : "否").append(",");
+            sb.append(escapeCsv(stationedVillagesStr)).append(",");
+        } else {
+            sb.append(",,,,,,");
+        }
+        
+        if (villageLevel != null) {
+            sb.append(escapeCsv(villageLevel.getVillageName())).append(",");
+            sb.append(escapeCsv(villageLevel.getVillageType())).append(",");
+            sb.append(escapeCsv(villageLevel.getPosition())).append(",");
+        } else {
+            sb.append(",,,");
+        }
+        
+        sb.append(hasMultipleIdentities ? "是" : "否").append(",");
+        sb.append(escapeCsv(status)).append(",");
+        sb.append(escapeCsv(createTime)).append(",");
+        sb.append(escapeCsv(updateTime));
+        
+        return sb.toString();
+    }
+    
+    private String escapeCsv(String value) {
+        if (value == null || value.isEmpty()) return "";
+        if (value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
     }
 }

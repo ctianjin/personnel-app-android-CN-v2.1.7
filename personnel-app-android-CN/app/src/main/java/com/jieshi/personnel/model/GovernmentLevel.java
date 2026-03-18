@@ -78,6 +78,21 @@ public class GovernmentLevel {
     public void setStationedVillages(String[] stationedVillages) {
         this.stationedVillages = stationedVillages;
     }
+    
+    /**
+     * 获取驻村列表字符串（用 | 分隔）
+     */
+    public String getStationedVillagesStr() {
+        if (stationedVillages == null || stationedVillages.length == 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < stationedVillages.length; i++) {
+            if (i > 0) sb.append("|");
+            sb.append(stationedVillages[i]);
+        }
+        return sb.toString();
+    }
 
     @Override
     public String toString() {

@@ -131,11 +131,12 @@ public class PersonnelDataManager {
         info.setWorkStartDate(getValue(values, columnIndex, "workstartdate"));
         info.setPhone(getValue(values, columnIndex, "phone"));
         
-        // 人员类型
+        // 人员类型（设置枚举和布尔标志）
         String typeStr = getValue(values, columnIndex, "personneltype");
         if (!typeStr.isEmpty()) {
             try {
                 info.setPersonnelType(PersonnelType.fromDisplayName(typeStr));
+                // setPersonnelType 会自动同步 isTownOfficial/isVillageCadre/isGridDefender
             } catch (IllegalArgumentException e) {
                 System.out.println("未知的人员类型：" + typeStr);
             }
@@ -166,6 +167,8 @@ public class PersonnelDataManager {
         
         if (!villageLevel.getVillageName().isEmpty() || !villageLevel.getPosition().isEmpty()) {
             info.setVillageLevel(villageLevel);
+            // 同步设置 villageCommunity（用于筛选）
+            info.setVillageCommunity(villageLevel.getVillageName());
         }
         
         // 多身份

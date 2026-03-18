@@ -144,7 +144,8 @@ public class PersonnelListActivity extends AppCompatActivity {
     }
     
     private void setupRecyclerView() {
-        adapter = new PersonnelListAdapter(personnelList, this);
+        // 传递人员类型到 Adapter，用于详情页卡片显示控制
+        adapter = new PersonnelListAdapter(personnelList, personnelType, this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
     }

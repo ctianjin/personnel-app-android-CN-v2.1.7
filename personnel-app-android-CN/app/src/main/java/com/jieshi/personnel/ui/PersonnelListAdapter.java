@@ -27,9 +27,11 @@ public class PersonnelListAdapter extends RecyclerView.Adapter<PersonnelListAdap
     
     private List<PersonnelInfo> dataList;
     private Context context;
+    private String personnelType;
     
-    public PersonnelListAdapter(List<PersonnelInfo> dataList, Context context) {
+    public PersonnelListAdapter(List<PersonnelInfo> dataList, String personnelType, Context context) {
         this.dataList = dataList;
+        this.personnelType = personnelType;
         this.context = context;
     }
     
@@ -69,6 +71,21 @@ public class PersonnelListAdapter extends RecyclerView.Adapter<PersonnelListAdap
         holder.cardView.setOnClickListener(v -> {
             Intent intent = new Intent(context, DetailActivity.class);
             intent.putExtra("personnel_id", info.getId());
+            
+            // 传递人员类型，用于控制详情页卡片显示
+            if (personnelType != null) {
+                intent.putExtra("personnel_type", personnelType);
+            } else {
+                // 根据人员信息推断类型
+                if (info.isTownOfficial()) {
+                    intent.putExtra("personnel_type", "town_official");
+                } else if (info.isVillageCadre()) {
+                    intent.putExtra("personnel_type", "village_cadre");
+                } else if (info.isGridDefender()) {
+                    intent.putExtra("personnel_type", "grid_defender");
+                }
+            }
+            
             context.startActivity(intent);
         });
     }

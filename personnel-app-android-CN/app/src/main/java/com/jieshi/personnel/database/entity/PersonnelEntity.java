@@ -56,6 +56,9 @@ public class PersonnelEntity {
     @ColumnInfo(name = "id_card")
     private String idCard;
     
+    @ColumnInfo(name = "native_place")
+    private String nativePlace;
+    
     @ColumnInfo(name = "address")
     private String address;
     
@@ -118,6 +121,7 @@ public class PersonnelEntity {
         this.workStartDate = info.getWorkStartDate();
         this.phone = info.getPhone();
         this.idCard = info.getIdCard();
+        this.nativePlace = info.getNativePlace();
         this.address = info.getAddress();
         
         if (info.getPersonnelType() != null) {
@@ -162,6 +166,7 @@ public class PersonnelEntity {
         info.setWorkStartDate(this.workStartDate);
         info.setPhone(this.phone);
         info.setIdCard(this.idCard);
+        info.setNativePlace(this.nativePlace);
         info.setAddress(this.address);
         
         if (this.personnelType != null) {
@@ -287,6 +292,14 @@ public class PersonnelEntity {
     
     public void setIdCard(String idCard) {
         this.idCard = idCard;
+    }
+
+    public String getNativePlace() {
+        return nativePlace;
+    }
+
+    public void setNativePlace(String nativePlace) {
+        this.nativePlace = nativePlace;
     }
     
     public String getAddress() {
