@@ -38,6 +38,7 @@ public class VillageListActivity extends AppCompatActivity {
         
         // 获取传入的人员类型
         personnelType = getIntent().getStringExtra("personnel_type");
+        android.util.Log.d("VillageList", "onCreate, personnel_type: " + personnelType);
         
         // 初始化视图
         initViews();
@@ -94,12 +95,21 @@ public class VillageListActivity extends AppCompatActivity {
     }
     
     private void setupRecyclerView() {
+        android.util.Log.d("VillageList", "setupRecyclerView, data size: " + villageList.size() + ", personnelType: " + personnelType);
+        
         // 3 列网格布局（根据设计图）
         GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
         recyclerView.setLayoutManager(layoutManager);
         
         adapter = new VillageAdapter(villageList, personnelType, this);
         recyclerView.setAdapter(adapter);
+        
+        android.util.Log.d("VillageList", "RecyclerView setup complete");
+        
+        // 如果数据为空，显示提示
+        if (villageList.isEmpty()) {
+            android.widget.Toast.makeText(this, "村社区数据为空，请检查 assets/villages.json", android.widget.Toast.LENGTH_LONG).show();
+        }
     }
     
     /**

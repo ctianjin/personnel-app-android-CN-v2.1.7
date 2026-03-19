@@ -34,12 +34,14 @@ public class VillageAdapter extends RecyclerView.Adapter<VillageAdapter.ViewHold
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_village, parent, false);
+        android.util.Log.d("VillageAdapter", "onCreateViewHolder called, position: " + getItemCount());
         return new ViewHolder(view);
     }
     
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         VillageListActivity.Village village = dataList.get(position);
+        android.util.Log.d("VillageAdapter", "onBindViewHolder position: " + position + ", name: " + village.name);
         holder.btnVillage.setText(village.name);
         
         // 点击跳转到人员列表
@@ -55,7 +57,9 @@ public class VillageAdapter extends RecyclerView.Adapter<VillageAdapter.ViewHold
     
     @Override
     public int getItemCount() {
-        return dataList.size();
+        int count = dataList.size();
+        android.util.Log.d("VillageAdapter", "getItemCount: " + count);
+        return count;
     }
     
     static class ViewHolder extends RecyclerView.ViewHolder {

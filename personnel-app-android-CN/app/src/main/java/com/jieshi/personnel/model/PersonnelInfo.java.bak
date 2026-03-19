@@ -265,22 +265,9 @@ public class PersonnelInfo {
             if (sb.length() > 0) sb.append(" / ");
             String position = governmentLevel.getPosition();
             if (position != null && !position.isEmpty()) {
-                // 检查是否是数字（如 999），如果是则使用 department
-                if (position.matches("\\d+")) {
-                    String dept = governmentLevel.getDepartment();
-                    if (dept != null && !dept.isEmpty()) {
-                        sb.append(dept);
-                    } else {
-                        sb.append("职务");
-                    }
-                } else {
-                    sb.append(position);
-                }
+                sb.append(position);
             } else {
-                String dept = governmentLevel.getDepartment();
-                if (dept != null && !dept.isEmpty()) {
-                    sb.append(dept);
-                }
+                sb.append(governmentLevel.getDepartment());
             }
         }
         
@@ -289,25 +276,15 @@ public class PersonnelInfo {
             if (sb.length() > 0) sb.append(" / ");
             String villageName = villageLevel.getVillageName();
             String position = villageLevel.getPosition();
-            
-            // 检查 position 是否是数字（如 999），如果是则使用默认职务
-            boolean isNumericPosition = position != null && position.matches("\\d+");
-            
             if (villageName != null && !villageName.isEmpty()) {
                 sb.append(villageName);
-                if (position != null && !position.isEmpty() && !isNumericPosition) {
+                if (position != null && !position.isEmpty()) {
                     sb.append(" - ").append(position);
-                } else if (isVillageCadre()) {
-                    sb.append(" - 村干部");
-                } else if (isGridDefender()) {
-                    sb.append(" - 网格联防员");
+                } else {
+                    // position 为空时不显示" - "
                 }
-            } else if (position != null && !position.isEmpty() && !isNumericPosition) {
+            } else if (position != null && !position.isEmpty()) {
                 sb.append(position);
-            } else if (isVillageCadre()) {
-                sb.append("村干部");
-            } else if (isGridDefender()) {
-                sb.append("网格联防员");
             }
         }
         

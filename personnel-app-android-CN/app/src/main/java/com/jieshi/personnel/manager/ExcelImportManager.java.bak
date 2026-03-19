@@ -285,18 +285,21 @@ public class ExcelImportManager {
         String workExperiencesStr = getCellValue(row, columnIndex, "工作履历");
         
         // 调试日志
-        Log.d(TAG, "导入人员：" + info.getName() + ", isVillageCadre=" + isVillageCadre + ", isGridDefender=" + isGridDefender + ", villageCommunity=" + villageCommunity + ", workExperiencesStr=" + workExperiencesStr);
+        Log.d(TAG, "导入人员：" + info.getName() + ", isVillageCadre=" + isVillageCadre + ", isGridDefender=" + isGridDefender + ", villageCommunity=" + villageCommunity);
         
         // 如果是村两委干部或网格联防员，设置 villageLevel
         if (isVillageCadre || isGridDefender) {
             VillageLevel villageLevel = new VillageLevel();
             villageLevel.setVillageName(villageCommunity);
             
-            // 从工作履历中提取职务 - 多种模式匹配
-            String position = extractPositionFromWorkExperiences(workExperiencesStr, isVillageCadre);
+            // 从工作履历中提取职务
+            String position = "";
+            if (workExperiencesStr.contains("任")) {
+                position = workExperiencesStr.substring(workExperiencesStr.indexOf("任") + 1).trim();
+            }
             
             // 如果提取失败，使用默认职务
-            if (position == null || position.isEmpty() || position.matches("\\d+")) {
+            if (position.isEmpty()) {
                 position = isVillageCadre ? "村干部" : "网格联防员";
             }
             villageLevel.setPosition(position);
@@ -385,67 +388,6 @@ public class ExcelImportManager {
             default:
                 return "";
         }
-    }
-    
-    /**
-     * 从工作履历中提取职务
-     * 支持多种格式：
-     * 1. "任 XX 村党支部书记"
-     * 2. "担任 XX 职务"
-     * 3. "XX 村 - 党支部书记"
-     * 4. "党支部书记"（直接是职务）
-     */
-    private String extractPositionFromWorkExperiences(String workExperiencesStr, boolean isVillageCadre) {
-        if (workExperiencesStr == null || workExperiencesStr.isEmpty()) {
-            return isVillageCadre ? "村干部" : "网格联防员";
-        }
-        
-        // 模式 1: "任 XX" - 提取"任"后面的内容
-        if (workExperiencesStr.contains("任")) {
-            int renIndex = workExperiencesStr.indexOf("任");
-            String afterRen = workExperiencesStr.substring(renIndex + 1).trim();
-            // 如果"任"后面还有内容，提取第一个完整职务
-            if (!afterRen.isEmpty()) {
-                // 查找换行或句号作为结束
-                int endIndex = afterRen.indexOf("\n");
-                if (endIndex == -1) endIndex = afterRen.indexOf(".");
-                if (endIndex == -1) endIndex = afterRen.indexOf("。");
-                if (endIndex > 0) {
-                    afterRen = afterRen.substring(0, endIndex).trim();
-                }
-                // 检查是否是有效职务（不是纯数字）
-                if (!afterRen.isEmpty() && !afterRen.matches("\\d+")) {
-                    return afterRen;
-                }
-            }
-        }
-        
-        // 模式 2: "担任 XX 职务"
-        if (workExperiencesStr.contains("担任")) {
-            int danrenIndex = workExperiencesStr.indexOf("担任");
-            String afterDanren = workExperiencesStr.substring(danrenIndex + 2).trim();
-            int endIndex = afterDanren.indexOf("\n");
-            if (endIndex == -1) endIndex = afterDanren.indexOf("职");
-            if (endIndex > 0) {
-                afterDanren = afterDanren.substring(0, endIndex).trim();
-            }
-            if (!afterDanren.isEmpty() && !afterDanren.matches("\\d+")) {
-                return afterDanren;
-            }
-        }
-        
-        // 模式 3: 直接取第一行（假设第一行是职务）
-        String[] lines = workExperiencesStr.split("\n");
-        if (lines.length > 0) {
-            String firstLine = lines[0].trim();
-            // 检查是否包含村名和职务（如"包一村党支部书记"）
-            if (!firstLine.isEmpty() && !firstLine.matches("\\d+")) {
-                return firstLine;
-            }
-        }
-        
-        // 默认返回
-        return isVillageCadre ? "村干部" : "网格联防员";
     }
     
     /**

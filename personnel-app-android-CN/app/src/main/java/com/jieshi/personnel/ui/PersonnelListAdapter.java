@@ -46,6 +46,7 @@ public class PersonnelListAdapter extends RecyclerView.Adapter<PersonnelListAdap
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         PersonnelInfo info = dataList.get(position);
+        android.util.Log.d("PersonnelAdapter", "onBindViewHolder position: " + position + ", name: " + info.getName());
         
         holder.tvName.setText(info.getName());
         holder.tvPosition.setText(info.getFullPosition());
@@ -92,7 +93,9 @@ public class PersonnelListAdapter extends RecyclerView.Adapter<PersonnelListAdap
     
     @Override
     public int getItemCount() {
-        return dataList.size();
+        int count = dataList.size();
+        android.util.Log.d("PersonnelAdapter", "getItemCount: " + count);
+        return count;
     }
     
     static class ViewHolder extends RecyclerView.ViewHolder {

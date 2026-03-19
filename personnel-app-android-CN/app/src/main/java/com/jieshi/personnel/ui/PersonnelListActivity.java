@@ -92,19 +92,27 @@ public class PersonnelListActivity extends AppCompatActivity {
         
         String csvPath = new File(getFilesDir(), "personnel.csv").getAbsolutePath();
         PersonnelDataManager dataManager = new PersonnelDataManager(csvPath);
-        dataManager.loadFromCsv();
+        boolean loaded = dataManager.loadFromCsv();
+        
+        android.util.Log.d("PersonnelList", "CSV loaded: " + loaded + ", path: " + csvPath);
         
         List<PersonnelInfo> allPersonnel = dataManager.getAllPersonnel();
+        android.util.Log.d("PersonnelList", "Total personnel: " + allPersonnel.size());
         
         if ("institution".equals(listType)) {
             // 按机构筛选
+            android.util.Log.d("PersonnelList", "Filter by institution: " + institutionId);
             for (PersonnelInfo info : allPersonnel) {
+                android.util.Log.d("PersonnelList", "Checking: " + info.getName() + ", isTownOfficial: " + info.isTownOfficial() + ", institution: " + info.getInstitution());
                 if (info.isTownOfficial() && institutionId.equals(info.getInstitution())) {
                     personnelList.add(info);
+                    android.util.Log.d("PersonnelList", "Matched: " + info.getName());
                 }
             }
+            android.util.Log.d("PersonnelList", "Matched institution personnel: " + personnelList.size());
         } else if ("village".equals(listType)) {
             // 按村社区筛选
+            android.util.Log.d("PersonnelList", "Filter by village: " + villageName + ", type: " + personnelType);
             List<PersonnelInfo> villageLeaders = new ArrayList<>();
             List<PersonnelInfo> others = new ArrayList<>();
             
@@ -113,12 +121,14 @@ public class PersonnelListActivity extends AppCompatActivity {
                 
                 if ("village_cadre".equals(personnelType) && info.isVillageCadre()) {
                     // 村两委干部
+                    android.util.Log.d("PersonnelList", "Checking village cadre: " + info.getName() + ", villageCommunity: " + info.getVillageCommunity());
                     if (villageName.equals(info.getVillageCommunity()) || 
                         info.isStationedInVillage(villageName)) {
                         match = true;
                     }
                 } else if ("grid_defender".equals(personnelType) && info.isGridDefender()) {
                     // 网格联防员
+                    android.util.Log.d("PersonnelList", "Checking grid defender: " + info.getName() + ", villageCommunity: " + info.getVillageCommunity());
                     if (villageName.equals(info.getVillageCommunity())) {
                         match = true;
                     }
@@ -140,7 +150,11 @@ public class PersonnelListActivity extends AppCompatActivity {
             
             personnelList.addAll(villageLeaders);
             personnelList.addAll(others);
+            
+            android.util.Log.d("PersonnelList", "Matched village personnel: " + personnelList.size() + " (leaders: " + villageLeaders.size() + ", others: " + others.size() + ")");
         }
+        
+        android.util.Log.d("PersonnelList", "Final personnel count: " + personnelList.size());
     }
     
     private void setupRecyclerView() {

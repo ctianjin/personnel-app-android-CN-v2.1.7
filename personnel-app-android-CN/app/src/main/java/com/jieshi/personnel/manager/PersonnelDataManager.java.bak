@@ -142,17 +142,6 @@ public class PersonnelDataManager {
             }
         }
         
-        // 如果没有设置 personnelType，检查布尔标志（兼容旧数据）
-        if (info.getPersonnelType() == null) {
-            if (info.isTownOfficial()) {
-                info.setPersonnelType(PersonnelType.TOWN_OFFICIAL);
-            } else if (info.isVillageCadre()) {
-                info.setPersonnelType(PersonnelType.VILLAGE_COMMITTEE);
-            } else if (info.isGridDefender()) {
-                info.setPersonnelType(PersonnelType.GRID_DEFENDER);
-            }
-        }
-        
         // 所属内设机构（镇府干部）
         info.setInstitution(getValue(values, columnIndex, "institution"));
         
