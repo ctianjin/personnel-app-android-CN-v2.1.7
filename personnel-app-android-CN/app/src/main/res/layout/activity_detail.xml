@@ -75,196 +75,274 @@
 
             </FrameLayout>
 
-            <!-- 基本信息（两列布局） -->
-            <LinearLayout
+            <!-- 基本信息（两列布局 - 使用 Guideline 对齐） -->
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:layout_marginBottom="16dp">
 
-                <!-- 第一行 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <!-- 垂直分割线：50% 位置 -->
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guidelineMiddle"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.5" />
 
-                    <TextView
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="姓  名："
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                    <TextView
-                        android:id="@+id/tvName"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                    <TextView
-                        android:layout_width="60dp"
-                        android:layout_height="wrap_content"
-                        android:text="性别："
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                    <TextView
-                        android:id="@+id/tvGender"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                </LinearLayout>
-
-                <!-- 第二行 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <!-- 第一行：姓名和性别 -->
+                <TextView
+                    android:id="@+id/labelName"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:text="姓  名："
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:layout_marginEnd="8dp" />
 
-                    <TextView
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="出生年月："
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                    <TextView
-                        android:id="@+id/tvBirthDate"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                    <TextView
-                        android:layout_width="60dp"
-                        android:layout_height="wrap_content"
-                        android:text="学历："
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                    <TextView
-                        android:id="@+id/tvEducation"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                </LinearLayout>
-
-                <!-- 第三行 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/tvName"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toEndOf="@id/labelName"
+                    app:layout_constraintEnd_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toTopOf="@id/labelName"
+                    android:layout_marginEnd="8dp" />
 
-                    <TextView
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="工作时间："
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                    <TextView
-                        android:id="@+id/tvWorkStartDate"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                    <TextView
-                        android:layout_width="60dp"
-                        android:layout_height="wrap_content"
-                        android:text="身份："
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                    <TextView
-                        android:id="@+id/tvIdentity"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                </LinearLayout>
-
-                <!-- 第四行 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/labelGender"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:text="性别："
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toTopOf="@id/labelName"
+                    android:layout_marginStart="8dp" />
 
-                    <TextView
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="入党时间："
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                    <TextView
-                        android:id="@+id/tvPoliticalStatus"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                    <TextView
-                        android:layout_width="60dp"
-                        android:layout_height="wrap_content"
-                        android:text="籍贯："
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                    <TextView
-                        android:id="@+id/tvAddress"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
-
-                </LinearLayout>
-
-                <!-- 第五行 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/tvGender"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toEndOf="@id/labelGender"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/labelGender" />
 
-                    <TextView
-                        android:layout_width="80dp"
-                        android:layout_height="wrap_content"
-                        android:text="现任职务："
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white" />
+                <!-- 第二行：出生年月和学历 -->
+                <TextView
+                    android:id="@+id/labelBirthDate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="出生年月："
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toBottomOf="@id/labelName"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="8dp" />
 
-                    <TextView
-                        android:id="@+id/tvPosition"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_white"
-                        android:maxLines="2"
-                        android:ellipsize="end" />
+                <TextView
+                    android:id="@+id/tvBirthDate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toEndOf="@id/labelBirthDate"
+                    app:layout_constraintEnd_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toTopOf="@id/labelBirthDate"
+                    android:layout_marginEnd="8dp" />
 
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/labelEducation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="学历："
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toTopOf="@id/labelBirthDate"
+                    android:layout_marginStart="8dp" />
 
-            </LinearLayout>
+                <TextView
+                    android:id="@+id/tvEducation"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toEndOf="@id/labelEducation"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/labelEducation" />
+
+                <!-- 第三行：工作时间和身份 -->
+                <TextView
+                    android:id="@+id/labelWorkStartDate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="工作时间："
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toBottomOf="@id/labelBirthDate"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/tvWorkStartDate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toEndOf="@id/labelWorkStartDate"
+                    app:layout_constraintEnd_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toTopOf="@id/labelWorkStartDate"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/labelIdentity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="身份："
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toTopOf="@id/labelWorkStartDate"
+                    android:layout_marginStart="8dp" />
+
+                <TextView
+                    android:id="@+id/tvIdentity"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toEndOf="@id/labelIdentity"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/labelIdentity" />
+
+                <!-- 第四行：政治面貌和籍贯 -->
+                <TextView
+                    android:id="@+id/labelPoliticalStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="政治面貌："
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toBottomOf="@id/labelWorkStartDate"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/tvPoliticalStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toEndOf="@id/labelPoliticalStatus"
+                    app:layout_constraintEnd_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toTopOf="@id/labelPoliticalStatus"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/labelNativePlace"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="籍贯："
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toTopOf="@id/labelPoliticalStatus"
+                    android:layout_marginStart="8dp" />
+
+                <TextView
+                    android:id="@+id/tvNativePlace"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toEndOf="@id/labelNativePlace"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/labelNativePlace" />
+
+                <!-- 第五行：入党时间和现住址 -->
+                <TextView
+                    android:id="@+id/labelPartyJoinDate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="入党时间："
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toBottomOf="@id/labelPoliticalStatus"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/tvPartyJoinDate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toEndOf="@id/labelPartyJoinDate"
+                    app:layout_constraintEnd_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toTopOf="@id/labelPartyJoinDate"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/labelAddress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="现住址："
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toStartOf="@id/guidelineMiddle"
+                    app:layout_constraintTop_toTopOf="@id/labelPartyJoinDate"
+                    android:layout_marginStart="8dp" />
+
+                <TextView
+                    android:id="@+id/tvAddress"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toEndOf="@id/labelAddress"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/labelAddress" />
+
+                <!-- 第六行：现任职务（跨整行） -->
+                <TextView
+                    android:id="@+id/labelPosition"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="现任职务："
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/labelPartyJoinDate"
+                    android:layout_marginTop="12dp" />
+
+                <TextView
+                    android:id="@+id/tvPosition"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_white"
+                    app:layout_constraintStart_toEndOf="@id/labelPosition"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/labelPosition"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <!-- 个人简历 -->
             <TextView

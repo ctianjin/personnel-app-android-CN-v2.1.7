@@ -21,6 +21,8 @@ public class FamilyMember {
     private String phone;
     /** 政治面貌 */
     private String politicalStatus;
+    /** 描述（整行原始文本） */
+    private String description;
 
     public FamilyMember() {
     }
@@ -79,8 +81,19 @@ public class FamilyMember {
         this.politicalStatus = politicalStatus;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     @Override
     public String toString() {
+        if (description != null && !description.isEmpty()) {
+            return description;
+        }
         return "FamilyMember{" +
                 "name='" + name + '\'' +
                 ", relationship='" + relationship + '\'' +

@@ -12,6 +12,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.jieshi.personnel.R;
 import com.jieshi.personnel.manager.PersonnelDataManager;
 import com.jieshi.personnel.model.PersonnelInfo;
+import com.jieshi.personnel.model.WorkExperience;
+import com.jieshi.personnel.model.FamilyMember;
+import com.jieshi.personnel.model.AwardPunishment;
 
 import java.io.File;
 
@@ -33,6 +36,7 @@ public class DetailActivity extends AppCompatActivity {
     private TextView tvName, tvGender, tvBirthDate, tvEducation;
     private TextView tvWorkStartDate, tvIdentity, tvPoliticalStatus, tvAddress;
     private TextView tvPosition;
+    private TextView tvNativePlace, tvPartyJoinDate;
     private TextView tvWorkExperiences, tvAwards, tvFamilyMembers, tvComment;
     
     private PersonnelDataManager dataManager;
@@ -71,6 +75,8 @@ public class DetailActivity extends AppCompatActivity {
         tvPoliticalStatus = findViewById(R.id.tvPoliticalStatus);
         tvAddress = findViewById(R.id.tvAddress);
         tvPosition = findViewById(R.id.tvPosition);
+        tvNativePlace = findViewById(R.id.tvNativePlace);
+        tvPartyJoinDate = findViewById(R.id.tvPartyJoinDate);
         
         // 详细信息
         tvWorkExperiences = findViewById(R.id.tvWorkExperiences);
@@ -139,14 +145,24 @@ public class DetailActivity extends AppCompatActivity {
         tvWorkStartDate.setText(currentInfo.getWorkStartDate());
         tvIdentity.setText(currentInfo.getIdentityDescription());
         tvPoliticalStatus.setText(currentInfo.getPoliticalStatus());
-        tvAddress.setText(currentInfo.getAddress());
-        tvPosition.setText(currentInfo.getFullPosition());
+        tvAddress.setText(currentInfo.getAddress() != null ? currentInfo.getAddress() : "暂无");
+        tvPosition.setText(currentInfo.getCurrentPosition() != null ? currentInfo.getCurrentPosition() : currentInfo.getFullPosition());
+        
+        // 籍贯
+        tvNativePlace.setText(currentInfo.getNativePlace() != null ? currentInfo.getNativePlace() : "暂无");
+        
+        // 入党时间 - 从 comment 中提取或显示政治面貌中的入党信息
+        String partyJoinDate = extractPartyJoinDate(currentInfo);
+        tvPartyJoinDate.setText(partyJoinDate != null ? partyJoinDate : "暂无");
         
         // 个人简历
         if (currentInfo.getWorkExperiences() != null && !currentInfo.getWorkExperiences().isEmpty()) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < currentInfo.getWorkExperiences().size(); i++) {
-                sb.append(currentInfo.getWorkExperiences().get(i).toString());
+                WorkExperience exp = currentInfo.getWorkExperiences().get(i);
+                // 优先使用 description 字段
+                String text = exp.getDescription() != null ? exp.getDescription() : exp.toString();
+                sb.append(text);
                 if (i < currentInfo.getWorkExperiences().size() - 1) {
                     sb.append("\n");
                 }
@@ -160,7 +176,10 @@ public class DetailActivity extends AppCompatActivity {
         if (currentInfo.getFamilyMembers() != null && !currentInfo.getFamilyMembers().isEmpty()) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < currentInfo.getFamilyMembers().size(); i++) {
-                sb.append(currentInfo.getFamilyMembers().get(i).toString());
+                FamilyMember fm = currentInfo.getFamilyMembers().get(i);
+                // 优先使用 description 字段
+                String text = fm.getDescription() != null ? fm.getDescription() : fm.toString();
+                sb.append(text);
                 if (i < currentInfo.getFamilyMembers().size() - 1) {
                     sb.append("\n");
                 }
@@ -174,7 +193,10 @@ public class DetailActivity extends AppCompatActivity {
         if (currentInfo.getAwardPunishments() != null && !currentInfo.getAwardPunishments().isEmpty()) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < currentInfo.getAwardPunishments().size(); i++) {
-                sb.append(currentInfo.getAwardPunishments().get(i).toString());
+                AwardPunishment ap = currentInfo.getAwardPunishments().get(i);
+                // 优先使用 description 字段
+                String text = ap.getDescription() != null ? ap.getDescription() : ap.toString();
+                sb.append(text);
                 if (i < currentInfo.getAwardPunishments().size() - 1) {
                     sb.append("\n");
                 }
@@ -193,6 +215,27 @@ public class DetailActivity extends AppCompatActivity {
         
         // 根据人员类型设置卡片显示
         setupDetailCards();
+    }
+    
+    /**
+     * 从 comment 中提取入党时间
+     */
+    private String extractPartyJoinDate(PersonnelInfo info) {
+        // 首先检查 comment 中是否有"入党时间："标记
+        if (info.getComment() != null && info.getComment().contains("入党时间：")) {
+            String comment = info.getComment();
+            int index = comment.indexOf("入党时间：");
+            if (index != -1) {
+                String after = comment.substring(index + 5); // "入党时间：" 长度为 5
+                // 提取到下一个分隔符或结尾
+                int endIndex = after.indexOf("|");
+                if (endIndex != -1) {
+                    return after.substring(0, endIndex).trim();
+                }
+                return after.trim();
+            }
+        }
+        return null;
     }
     
     /**

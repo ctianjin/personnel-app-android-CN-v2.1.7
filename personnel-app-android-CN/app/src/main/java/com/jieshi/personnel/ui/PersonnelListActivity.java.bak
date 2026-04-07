@@ -113,44 +113,24 @@ public class PersonnelListActivity extends AppCompatActivity {
         } else if ("village".equals(listType)) {
             // 按村社区筛选
             android.util.Log.d("PersonnelList", "Filter by village: " + villageName + ", type: " + personnelType);
-            android.util.Log.d("PersonnelList", "Total personnel in CSV: " + allPersonnel.size());
-            
             List<PersonnelInfo> villageLeaders = new ArrayList<>();
             List<PersonnelInfo> others = new ArrayList<>();
             
-            // 统计各类别人数
-            int villageCadreCount = 0;
-            int gridDefenderCount = 0;
-            int matchedVillageCadre = 0;
-            int matchedGridDefender = 0;
-            
             for (PersonnelInfo info : allPersonnel) {
-                // 统计
-                if (info.isVillageCadre()) villageCadreCount++;
-                if (info.isGridDefender()) gridDefenderCount++;
-                
                 boolean match = false;
                 
                 if ("village_cadre".equals(personnelType) && info.isVillageCadre()) {
                     // 村两委干部
-                    android.util.Log.d("PersonnelList", "Checking village cadre: " + info.getName() + 
-                        ", villageCommunity='" + info.getVillageCommunity() + 
-                        "', target='" + villageName + "'");
+                    android.util.Log.d("PersonnelList", "Checking village cadre: " + info.getName() + ", villageCommunity: " + info.getVillageCommunity());
                     if (villageName.equals(info.getVillageCommunity()) || 
                         info.isStationedInVillage(villageName)) {
                         match = true;
-                        matchedVillageCadre++;
-                        android.util.Log.d("PersonnelList", "✓ Matched village cadre: " + info.getName());
                     }
                 } else if ("grid_defender".equals(personnelType) && info.isGridDefender()) {
                     // 网格联防员
-                    android.util.Log.d("PersonnelList", "Checking grid defender: " + info.getName() + 
-                        ", villageCommunity='" + info.getVillageCommunity() + 
-                        "', target='" + villageName + "'");
+                    android.util.Log.d("PersonnelList", "Checking grid defender: " + info.getName() + ", villageCommunity: " + info.getVillageCommunity());
                     if (villageName.equals(info.getVillageCommunity())) {
                         match = true;
-                        matchedGridDefender++;
-                        android.util.Log.d("PersonnelList", "✓ Matched grid defender: " + info.getName());
                     }
                 }
                 
@@ -164,11 +144,6 @@ public class PersonnelListActivity extends AppCompatActivity {
                 }
             }
             
-            android.util.Log.d("PersonnelList", "Statistics: villageCadre=" + villageCadreCount + 
-                ", gridDefender=" + gridDefenderCount + 
-                ", matchedVillageCadre=" + matchedVillageCadre + 
-                ", matchedGridDefender=" + matchedGridDefender);
-            
             // 排序
             Collections.sort(villageLeaders, Comparator.comparingInt(PersonnelInfo::getPositionOrder));
             Collections.sort(others, Comparator.comparingInt(PersonnelInfo::getPositionOrder));
@@ -176,8 +151,7 @@ public class PersonnelListActivity extends AppCompatActivity {
             personnelList.addAll(villageLeaders);
             personnelList.addAll(others);
             
-            android.util.Log.d("PersonnelList", "Matched village personnel: " + personnelList.size() + 
-                " (leaders: " + villageLeaders.size() + ", others: " + others.size() + ")");
+            android.util.Log.d("PersonnelList", "Matched village personnel: " + personnelList.size() + " (leaders: " + villageLeaders.size() + ", others: " + others.size() + ")");
         }
         
         android.util.Log.d("PersonnelList", "Final personnel count: " + personnelList.size());

@@ -62,6 +62,12 @@ public class PersonnelEntity {
     @ColumnInfo(name = "address")
     private String address;
     
+    @ColumnInfo(name = "current_position")
+    private String currentPosition;
+    
+    @ColumnInfo(name = "party_join_date")
+    private String partyJoinDate;
+    
     @ColumnInfo(name = "personnel_type")
     private String personnelType;
     
@@ -108,6 +114,29 @@ public class PersonnelEntity {
     /**
      * 从 PersonnelInfo 转换
      */
+    /**
+     * 从 PersonnelInfo 中提取入党时间
+     */
+    @Ignore
+    private String extractPartyJoinDate(PersonnelInfo info) {
+        if (info.getComment() != null && info.getComment().contains("入党时间：")) {
+            String comment = info.getComment();
+            int index = comment.indexOf("入党时间：");
+            if (index != -1) {
+                String after = comment.substring(index + 5);
+                int endIndex = after.indexOf("|");
+                if (endIndex != -1) {
+                    return after.substring(0, endIndex).trim();
+                }
+                return after.trim();
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * 从 PersonnelInfo 转换
+     */
     @Ignore
     public PersonnelEntity(PersonnelInfo info) {
         this.id = info.getId() != null ? info.getId() : "";
@@ -123,6 +152,10 @@ public class PersonnelEntity {
         this.idCard = info.getIdCard();
         this.nativePlace = info.getNativePlace();
         this.address = info.getAddress();
+        this.currentPosition = info.getCurrentPosition();
+        
+        // 从 comment 中提取入党时间
+        this.partyJoinDate = extractPartyJoinDate(info);
         
         if (info.getPersonnelType() != null) {
             this.personnelType = info.getPersonnelType().name();
@@ -168,6 +201,17 @@ public class PersonnelEntity {
         info.setIdCard(this.idCard);
         info.setNativePlace(this.nativePlace);
         info.setAddress(this.address);
+        info.setCurrentPosition(this.currentPosition);
+        
+        // 如果有独立的入党时间字段，添加到 comment
+        if (this.partyJoinDate != null && !this.partyJoinDate.isEmpty()) {
+            String existingComment = info.getComment() != null ? info.getComment() : "";
+            if (!existingComment.isEmpty()) {
+                info.setComment(existingComment + " | 入党时间：" + this.partyJoinDate);
+            } else {
+                info.setComment("入党时间：" + this.partyJoinDate);
+            }
+        }
         
         if (this.personnelType != null) {
             try {
@@ -308,6 +352,22 @@ public class PersonnelEntity {
     
     public void setAddress(String address) {
         this.address = address;
+    }
+    
+    public String getCurrentPosition() {
+        return currentPosition;
+    }
+    
+    public void setCurrentPosition(String currentPosition) {
+        this.currentPosition = currentPosition;
+    }
+    
+    public String getPartyJoinDate() {
+        return partyJoinDate;
+    }
+    
+    public void setPartyJoinDate(String partyJoinDate) {
+        this.partyJoinDate = partyJoinDate;
     }
     
     public String getPersonnelType() {

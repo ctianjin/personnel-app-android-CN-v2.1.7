@@ -212,10 +212,22 @@ public class ExcelImportManager {
             Cell cell = headerRow.getCell(i);
             if (cell != null) {
                 String columnName = cell.getStringCellValue().trim();
+                if (columnName.isEmpty()) continue;
+                
+                // 放入原始列名（中文或英文）
+                columnIndex.put(columnName, i);
+                // 放入小写版本
                 columnIndex.put(columnName.toLowerCase(), i);
+                // 放入去除空格的版本
+                String noSpace = columnName.replace(" ", "").replace("\u00A0", "");
+                if (!noSpace.isEmpty() && !noSpace.equals(columnName)) {
+                    columnIndex.put(noSpace, i);
+                    columnIndex.put(noSpace.toLowerCase(), i);
+                }
             }
         }
         
+        Log.d(TAG, "parseHeader: 共解析 " + columnIndex.size() + " 个列名");
         return columnIndex;
     }
     
@@ -225,9 +237,14 @@ public class ExcelImportManager {
     private PersonnelInfo parseRow(Row row, Map<String, Integer> columnIndex) {
         PersonnelInfo info = new PersonnelInfo();
         
+        Log.d(TAG, "parseRow: 开始解析，列数=" + columnIndex.size());
+        
         // 基本信息
         info.setId(getCellValue(row, columnIndex, "id"));
-        info.setName(getCellValue(row, columnIndex, "姓名"));
+        String name = getCellValue(row, columnIndex, "姓名");
+        Log.d(TAG, "parseRow: 姓名=" + name);
+        info.setName(name);
+        
         info.setGender(getCellValue(row, columnIndex, "性别"));
         info.setBirthDate(getCellValue(row, columnIndex, "出生日期"));
         info.setEthnicity(getCellValue(row, columnIndex, "民族"));
@@ -239,6 +256,27 @@ public class ExcelImportManager {
         info.setIdCard(getCellValue(row, columnIndex, "身份证号"));
         info.setAddress(getCellValue(row, columnIndex, "现住址"));
         info.setComment(getCellValue(row, columnIndex, "简要评价"));
+        
+        // 籍贯
+        info.setNativePlace(getCellValue(row, columnIndex, "籍贯"));
+        
+        // 现任职务
+        String currentPosition = getCellValue(row, columnIndex, "现任职务");
+        if (!currentPosition.isEmpty()) {
+            info.setCurrentPosition(currentPosition);
+        }
+        
+        // 入党时间
+        String partyJoinDate = getCellValue(row, columnIndex, "入党时间");
+        if (!partyJoinDate.isEmpty()) {
+            // 存储到 comment 字段，格式化为易读形式
+            String existingComment = info.getComment() != null ? info.getComment() : "";
+            if (!existingComment.isEmpty()) {
+                info.setComment(existingComment + " | 入党时间：" + partyJoinDate);
+            } else {
+                info.setComment("入党时间：" + partyJoinDate);
+            }
+        }
         
         // 身份标识（同时设置布尔标志和 personnelType 枚举）
         boolean isTownOfficial = "是".equals(getCellValue(row, columnIndex, "是否镇府干部"));
@@ -354,16 +392,39 @@ public class ExcelImportManager {
     }
     
     /**
-     * 获取单元格值
+     * 获取单元格值（同时查找多种列名格式）
      */
     private String getCellValue(Row row, Map<String, Integer> columnIndex, String columnName) {
-        Integer index = columnIndex.get(columnName.toLowerCase());
+        Integer index = null;
+        
+        // 尝试多种列名格式
+        String[] variants = {
+            columnName,  // 原始
+            columnName.trim(),  // trim
+            columnName.replace(" ", "").replace("\u00A0", ""),  // 去空格
+            columnName.toLowerCase(),  // 小写
+            columnName.trim().toLowerCase(),  // trim+ 小写
+            columnName.replace(" ", "").replace("\u00A0", "").toLowerCase()  // 去空格 + 小写
+        };
+        
+        for (String variant : variants) {
+            if (!variant.isEmpty()) {
+                index = columnIndex.get(variant);
+                if (index != null) {
+                    Log.d(TAG, "getCellValue: 找到列 '" + columnName + "' -> '" + variant + "' index=" + index);
+                    break;
+                }
+            }
+        }
+        
         if (index == null) {
+            Log.w(TAG, "getCellValue: 找不到列 '" + columnName + "', 可用列：" + columnIndex.keySet());
             return "";
         }
         
         Cell cell = row.getCell(index);
         if (cell == null) {
+            Log.w(TAG, "getCellValue: 单元格为空，列：" + columnName + ", 索引：" + index);
             return "";
         }
         

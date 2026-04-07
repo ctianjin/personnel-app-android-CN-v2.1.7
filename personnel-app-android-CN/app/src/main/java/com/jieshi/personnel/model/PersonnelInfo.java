@@ -25,6 +25,8 @@ public class PersonnelInfo {
     private String nativePlace;
     /** 现住址 */
     private String address;
+    /** 现任职务 */
+    private String currentPosition;
     private String avatarPath;
     private String comment;
 
@@ -188,6 +190,9 @@ public class PersonnelInfo {
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
 
+    public String getCurrentPosition() { return currentPosition; }
+    public void setCurrentPosition(String currentPosition) { this.currentPosition = currentPosition; }
+
     public String getAvatarPath() { return avatarPath; }
     public void setAvatarPath(String avatarPath) { this.avatarPath = avatarPath; }
 
@@ -331,45 +336,55 @@ public class PersonnelInfo {
         sb.append(escapeCsv(major)).append(",");
         sb.append(escapeCsv(workStartDate)).append(",");
         sb.append(escapeCsv(phone)).append(",");
-        sb.append(escapeCsv(idCard)).append(",");
         sb.append(escapeCsv(nativePlace)).append(",");
         sb.append(escapeCsv(address)).append(",");
+        sb.append(escapeCsv(currentPosition)).append(",");
+        sb.append(escapeCsv(comment)).append(",");
         
         sb.append(personnelType != null ? personnelType.getDisplayName() : "").append(",");
-        
-        // 所属内设机构
         sb.append(escapeCsv(institution)).append(",");
-        
-        // 单位内职位排序
         sb.append(positionOrder).append(",");
-        
-        if (governmentLevel != null) {
-            sb.append(escapeCsv(governmentLevel.getTownName())).append(",");
-            sb.append(escapeCsv(governmentLevel.getDepartment())).append(",");
-            sb.append(escapeCsv(governmentLevel.getPosition())).append(",");
-            sb.append(escapeCsv(governmentLevel.getRank())).append(",");
-            sb.append(governmentLevel.isVillageLeader() ? "是" : "否").append(",");
-            sb.append(escapeCsv(stationedVillagesStr)).append(",");
-        } else {
-            sb.append(",,,,,,");
-        }
-        
-        if (villageLevel != null) {
-            sb.append(escapeCsv(villageLevel.getVillageName())).append(",");
-            sb.append(escapeCsv(villageLevel.getVillageType())).append(",");
-            sb.append(escapeCsv(villageLevel.getPosition())).append(",");
-        } else {
-            sb.append(",,,");
-        }
-        
-        // 所属村社区
         sb.append(escapeCsv(villageCommunity)).append(",");
         
-        sb.append(hasMultipleIdentities ? "是" : "否").append(",");
+        // 添加履历、奖惩、家庭成员字段
+        sb.append(escapeCsv(workExperiencesToString())).append(",");
+        sb.append(escapeCsv(awardPunishmentsToString())).append(",");
+        sb.append(escapeCsv(familyMembersToString())).append(",");
+        
         sb.append(escapeCsv(status)).append(",");
         sb.append(escapeCsv(createTime)).append(",");
         sb.append(escapeCsv(updateTime));
         
+        return sb.toString();
+    }
+    
+    private String workExperiencesToString() {
+        if (workExperiences == null || workExperiences.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < workExperiences.size(); i++) {
+            sb.append(workExperiences.get(i).getDescription());
+            if (i < workExperiences.size() - 1) sb.append("\\n");
+        }
+        return sb.toString();
+    }
+    
+    private String awardPunishmentsToString() {
+        if (awardPunishments == null || awardPunishments.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < awardPunishments.size(); i++) {
+            sb.append(awardPunishments.get(i).getDescription());
+            if (i < awardPunishments.size() - 1) sb.append("\\n");
+        }
+        return sb.toString();
+    }
+    
+    private String familyMembersToString() {
+        if (familyMembers == null || familyMembers.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < familyMembers.size(); i++) {
+            sb.append(familyMembers.get(i).getDescription());
+            if (i < familyMembers.size() - 1) sb.append("\\n");
+        }
         return sb.toString();
     }
     

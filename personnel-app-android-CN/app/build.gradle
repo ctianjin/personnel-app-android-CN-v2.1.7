@@ -107,6 +107,8 @@ dependencies {
     implementation "androidx.room:room-runtime:2.6.1"
     annotationProcessor "androidx.room:room-compiler:2.6.1"
     implementation "androidx.room:room-ktx:2.6.1"
+    // 解决 Room 在某些环境下找不到 SQLite 驱动的问题
+    annotationProcessor "org.xerial:sqlite-jdbc:3.45.1.0"
 
     // ==================== 生命周期组件 ====================
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'

@@ -5,6 +5,8 @@ import android.content.Context;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.jieshi.personnel.database.dao.PersonnelDao;
 import com.jieshi.personnel.database.entity.PersonnelEntity;
@@ -20,7 +22,7 @@ import com.jieshi.personnel.database.entity.PersonnelEntity;
  */
 @Database(
     entities = {PersonnelEntity.class},
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 public abstract class PersonnelDatabase extends RoomDatabase {
@@ -40,6 +42,7 @@ public abstract class PersonnelDatabase extends RoomDatabase {
                             PersonnelDatabase.class,
                             DATABASE_NAME
                         )
+                        .addMigrations(MIGRATION_1_2)
                         .fallbackToDestructiveMigration() // 开发阶段使用，生产环境应实现 Migration
                         .build();
                 }
@@ -47,6 +50,18 @@ public abstract class PersonnelDatabase extends RoomDatabase {
         }
         return INSTANCE;
     }
+    
+    /**
+     * 数据库迁移：1 -> 2
+     * 添加 current_position 和 party_join_date 字段
+     */
+    private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE personnel ADD COLUMN current_position TEXT");
+            database.execSQL("ALTER TABLE personnel ADD COLUMN party_join_date TEXT");
+        }
+    };
     
     /**
      * 获取人员 DAO

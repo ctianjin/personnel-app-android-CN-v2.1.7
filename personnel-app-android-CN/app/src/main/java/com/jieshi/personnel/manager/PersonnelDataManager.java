@@ -101,14 +101,62 @@ public class PersonnelDataManager {
 
     /**
      * 解析 CSV 表头
+     * 支持中英文列名映射（保持驼峰命名）
      */
     private Map<String, Integer> parseHeader(String headerLine) {
         Map<String, Integer> columnIndex = new HashMap<>();
         String[] columns = headerLine.split(",");
         for (int i = 0; i < columns.length; i++) {
-            columnIndex.put(columns[i].trim().toLowerCase(), i);
+            String colName = columns[i].trim();
+            // 放入原始列名（保持驼峰命名）
+            columnIndex.put(colName, i);
+            // 放入小写版本（兼容旧数据）
+            columnIndex.put(colName.toLowerCase(), i);
+            // 放入中文到英文的映射
+            String englishName = chineseToEnglish(colName);
+            if (englishName != null && !englishName.isEmpty()) {
+                // 放入驼峰命名
+                columnIndex.put(englishName, i);
+                // 放入小写版本（兼容旧数据）
+                columnIndex.put(englishName.toLowerCase(), i);
+            }
         }
         return columnIndex;
+    }
+
+    /**
+     * 中文列名转英文列名映射
+     */
+    private String chineseToEnglish(String chinese) {
+        if (chinese == null) return null;
+        switch (chinese) {
+            case "姓名": return "name";
+            case "性别": return "gender";
+            case "出生日期": return "birthDate";
+            case "民族": return "ethnicity";
+            case "政治面貌": return "politicalStatus";
+            case "学历": return "education";
+            case "专业": return "major";
+            case "参加工作时间": return "workStartDate";
+            case "联系电话": return "phone";
+            case "身份证号": return "idCard";
+            case "现住址": return "address";
+            case "籍贯": return "nativePlace";
+            case "现任职务": return "currentPosition";
+            case "简要评价": return "comment";
+            case "是否镇府干部": return "isTownOfficial";
+            case "是否村两委干部": return "isVillageCadre";
+            case "是否网格联防员": return "isGridDefender";
+            case "所属内设机构": return "institution";
+            case "单位内职位排序": return "positionOrder";
+            case "所属村（社区）": return "villageCommunity";
+            case "工作履历": return "workExperiences";
+            case "奖惩记录": return "awardPunishments";
+            case "近亲属信息": return "familyMembers";
+            case "人员类型": return "personnelType";
+            case "入党时间": return "partyJoinDate";
+            default: return null;
+        }
     }
 
     /**
@@ -119,20 +167,24 @@ public class PersonnelDataManager {
         
         PersonnelInfo info = new PersonnelInfo();
         
-        // 基本信息
+        // 基本信息（字段名与 getCsvHeader() 完全一致，驼峰命名）
         info.setId(getValue(values, columnIndex, "id"));
         info.setName(getValue(values, columnIndex, "name"));
         info.setGender(getValue(values, columnIndex, "gender"));
-        info.setBirthDate(getValue(values, columnIndex, "birthdate"));
+        info.setBirthDate(getValue(values, columnIndex, "birthDate"));
         info.setEthnicity(getValue(values, columnIndex, "ethnicity"));
-        info.setPoliticalStatus(getValue(values, columnIndex, "politicalstatus"));
+        info.setPoliticalStatus(getValue(values, columnIndex, "politicalStatus"));
         info.setEducation(getValue(values, columnIndex, "education"));
         info.setMajor(getValue(values, columnIndex, "major"));
-        info.setWorkStartDate(getValue(values, columnIndex, "workstartdate"));
+        info.setWorkStartDate(getValue(values, columnIndex, "workStartDate"));
         info.setPhone(getValue(values, columnIndex, "phone"));
+        info.setNativePlace(getValue(values, columnIndex, "nativePlace"));
+        info.setAddress(getValue(values, columnIndex, "address"));
+        info.setCurrentPosition(getValue(values, columnIndex, "currentPosition"));
+        info.setComment(getValue(values, columnIndex, "comment"));
         
         // 人员类型（设置枚举和布尔标志）
-        String typeStr = getValue(values, columnIndex, "personneltype");
+        String typeStr = getValue(values, columnIndex, "personnelType");
         if (!typeStr.isEmpty()) {
             try {
                 info.setPersonnelType(PersonnelType.fromDisplayName(typeStr));
@@ -157,7 +209,7 @@ public class PersonnelDataManager {
         info.setInstitution(getValue(values, columnIndex, "institution"));
         
         // 单位内职位排序
-        String positionOrderStr = getValue(values, columnIndex, "positionorder");
+        String positionOrderStr = getValue(values, columnIndex, "positionOrder");
         if (!positionOrderStr.isEmpty()) {
             try {
                 info.setPositionOrder(Integer.parseInt(positionOrderStr));
@@ -166,50 +218,80 @@ public class PersonnelDataManager {
             }
         }
         
-        // 政府层级
-        GovernmentLevel govLevel = new GovernmentLevel();
-        govLevel.setTownName(getValue(values, columnIndex, "townname"));
-        govLevel.setDepartment(getValue(values, columnIndex, "department"));
-        govLevel.setPosition(getValue(values, columnIndex, "position"));
-        govLevel.setRank(getValue(values, columnIndex, "rank"));
-        govLevel.setVillageLeader("是".equals(getValue(values, columnIndex, "isvillageleader")));
-        
-        String[] villages = getValue(values, columnIndex, "stationedvillages").split("\\|");
-        govLevel.setStationedVillages(villages);
-        
-        if (!govLevel.getTownName().isEmpty() || !govLevel.getDepartment().isEmpty()) {
-            info.setGovernmentLevel(govLevel);
-        }
-        
-        // 村层级
-        VillageLevel villageLevel = new VillageLevel();
-        villageLevel.setVillageName(getValue(values, columnIndex, "villagename"));
-        villageLevel.setVillageType(getValue(values, columnIndex, "villagetype"));
-        villageLevel.setPosition(getValue(values, columnIndex, "villageposition"));
-        villageLevel.setSecretary("是".equals(getValue(values, columnIndex, "issecretary")));
-        villageLevel.setStationedLeader("是".equals(getValue(values, columnIndex, "isstationedleader")));
-        
-        if (!villageLevel.getVillageName().isEmpty() || !villageLevel.getPosition().isEmpty()) {
-            info.setVillageLevel(villageLevel);
-            // 同步设置 villageCommunity（用于筛选）
-            info.setVillageCommunity(villageLevel.getVillageName());
-        }
-        
-        // 所属村社区（直接从 CSV 读取，优先级高于 villageLevel）
-        String villageCommunity = getValue(values, columnIndex, "villagecommunity");
+        // 所属村社区
+        String villageCommunity = getValue(values, columnIndex, "villageCommunity");
         if (!villageCommunity.isEmpty()) {
             info.setVillageCommunity(villageCommunity);
         }
         
-        // 多身份
-        info.setHasMultipleIdentities("是".equals(getValue(values, columnIndex, "hasmultipleidentities")));
+        // 解析列表类型字段（工作履历、奖惩记录、家庭成员）
+        parseWorkExperiences(info, getValue(values, columnIndex, "workExperiences"));
+        parseAwardPunishments(info, getValue(values, columnIndex, "awardPunishments"));
+        parseFamilyMembers(info, getValue(values, columnIndex, "familyMembers"));
         
         // 系统字段
         info.setStatus(getValue(values, columnIndex, "status"));
-        info.setCreateTime(getValue(values, columnIndex, "createtime"));
-        info.setUpdateTime(getValue(values, columnIndex, "updatetime"));
+        info.setCreateTime(getValue(values, columnIndex, "createTime"));
+        info.setUpdateTime(getValue(values, columnIndex, "updateTime"));
         
         return info;
+    }
+
+    /**
+     * 解析工作履历（支持多行文本）
+     * 格式：每行一条记录，如 "2018.01-2020.12  XX 单位 XX 职务"
+     */
+    private void parseWorkExperiences(PersonnelInfo info, String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return;
+        }
+        String[] lines = text.split("\\n");
+        for (String line : lines) {
+            line = line.trim();
+            if (!line.isEmpty()) {
+                WorkExperience exp = new WorkExperience();
+                exp.setDescription(line);
+                info.addWorkExperience(exp);
+            }
+        }
+    }
+
+    /**
+     * 解析奖惩记录（支持多行文本）
+     * 格式：每行一条记录，如 "2023 年 被评为优秀公务员"
+     */
+    private void parseAwardPunishments(PersonnelInfo info, String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return;
+        }
+        String[] lines = text.split("\\n");
+        for (String line : lines) {
+            line = line.trim();
+            if (!line.isEmpty()) {
+                AwardPunishment ap = new AwardPunishment();
+                ap.setDescription(line);
+                info.addAwardPunishment(ap);
+            }
+        }
+    }
+
+    /**
+     * 解析家庭成员及重要社会关系（支持多行文本）
+     * 格式：每行一条记录，如 "父亲 张三 XX 单位退休"
+     */
+    private void parseFamilyMembers(PersonnelInfo info, String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return;
+        }
+        String[] lines = text.split("\\n");
+        for (String line : lines) {
+            line = line.trim();
+            if (!line.isEmpty()) {
+                FamilyMember fm = new FamilyMember();
+                fm.setDescription(line);
+                info.addFamilyMember(fm);
+            }
+        }
     }
 
     /**
@@ -246,10 +328,29 @@ public class PersonnelDataManager {
      * 安全获取 CSV 值
      */
     private String getValue(String[] values, Map<String, Integer> columnIndex, String columnName) {
-        Integer index = columnIndex.get(columnName.toLowerCase());
-        if (index != null && index < values.length) {
-            return values[index];
+        Integer index = null;
+        
+        // 尝试多种列名格式
+        String[] variants = {
+            columnName,  // 原始（驼峰）
+            columnName.toLowerCase(),  // 小写
+            columnName.toUpperCase(),  // 大写
+        };
+        
+        for (String variant : variants) {
+            index = columnIndex.get(variant);
+            if (index != null) {
+                break;
+            }
         }
+        
+        if (index != null && index < values.length) {
+            String value = values[index];
+            System.out.println("getValue: columnName=" + columnName + ", index=" + index + ", value=" + value);
+            return value;
+        }
+        
+        System.out.println("getValue: 未找到 columnName=" + columnName + ", columnIndex keys=" + columnIndex.keySet());
         return "";
     }
 
@@ -597,8 +698,10 @@ public class PersonnelDataManager {
      */
     private String getCsvHeader() {
         return "id,name,gender,birthDate,ethnicity,politicalStatus,education,major,workStartDate,phone," +
-               "personnelType,institution,positionOrder,townName,department,position,rank,isVillageLeader,stationedVillages," +
-               "villageName,villageType,villagePosition,villageCommunity,hasMultipleIdentities,status,createTime,updateTime";
+               "nativePlace,address,currentPosition,comment," +
+               "personnelType,institution,positionOrder,villageCommunity," +
+               "workExperiences,awardPunishments,familyMembers," +
+               "status,createTime,updateTime";
     }
 
     // ==================== 辅助方法 ====================
